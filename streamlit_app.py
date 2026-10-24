@@ -1,4 +1,22 @@
 import streamlit as st
+import pandas as pd
+from pathlib import Path
+
+# Find the folder containing this app
+APP_DIR = Path(__file__).parent
+
+# Load MealMatch data
+@st.cache_data
+def load_meal_data():
+    meals = pd.read_csv(
+        APP_DIR / "Rizaly Barlam - MealMatch CSV(Meals).csv"
+    )
+    ingredients = pd.read_csv(
+        APP_DIR / "Rizaly Barlam - MealMatch CSV(Ingredients).csv"
+    )
+    return meals, ingredients
+
+meals, ingredients = load_meal_data()
 
 st.set_page_config(
     page_title="MealMatch",
