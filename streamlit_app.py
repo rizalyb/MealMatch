@@ -94,14 +94,24 @@ with st.sidebar:
     else:
         weekly_budget = None
 
-    st.subheader("Cooking")
-    max_time = st.slider(
-        "Maximum cooking time (minutes)",
-        min_value=5,
-        max_value=120,
-        value=30,
-        step=5
+ st.subheader("Cooking")
+
+    use_time_limit = st.checkbox(
+        "Set a maximum cooking time",
+        value=True
     )
+
+    if use_time_limit:
+        max_time = st.slider(
+            "Maximum cooking time (minutes)",
+            min_value=5,
+            max_value=120,
+            value=30,
+            step=5
+        )
+    else:
+        max_time = None
+
 
     desired_servings = st.selectbox(
         "How many people are you cooking for?",
