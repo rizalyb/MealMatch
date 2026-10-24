@@ -190,10 +190,15 @@ filtered_meals["Time Number"] = pd.to_numeric(
 )
 
 # Apply budget and cooking-time preferences
-filtered_meals = filtered_meals[
-    (filtered_meals["Cost Number"] <= budget)
-    & (filtered_meals["Time Number"] <= max_time)
-]
+if budget is not None:
+    filtered_meals = filtered_meals[
+        filtered_meals["Cost Number"] <= budget
+    ]
+
+if max_time is not None:
+    filtered_meals = filtered_meals[
+        filtered_meals["Time Number"] <= max_time
+    ]
 
 st.write(f"**{len(filtered_meals)} matching recipes found**")
 
