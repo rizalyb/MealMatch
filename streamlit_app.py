@@ -31,17 +31,21 @@ st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
 
-.stApp {
-    background-color: #FAF8F2;
+html, body, [class*="css"] {
     font-family: 'Nunito', sans-serif;
 }
 
+.stApp {
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
 h1, h2, h3 {
-    color: #315C45;
+    color: var(--text-color);
 }
 
 [data-testid="stSidebar"] {
-    background-color: #F0F2E8;
+    background-color: var(--secondary-background-color);
 }
 
 .stButton > button {
@@ -51,8 +55,14 @@ h1, h2, h3 {
     border: none;
     font-weight: 700;
 }
+
+.stButton > button:hover {
+    background-color: #315C45;
+    color: white;
+}
 </style>
 """, unsafe_allow_html=True)
+
 # Sidebar: Student Preferences
 
 with st.sidebar:
