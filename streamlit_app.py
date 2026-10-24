@@ -176,7 +176,8 @@ with st.sidebar:
 
     use_protein_goal = st.checkbox(
         "Set a minimum protein goal",
-        value=False
+        value=False,
+        key="use_protein_goal_checkbox"
     )
 
     if use_protein_goal:
