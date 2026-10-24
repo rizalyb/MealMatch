@@ -140,7 +140,7 @@ with st.sidebar:
         placeholder="e.g., seafood, mushrooms"
     )
 
- st.subheader("Nutrition Goals")
+st.subheader("Nutrition Goals")
 
     use_calorie_limit = st.checkbox(
         "Set a maximum calorie limit",
