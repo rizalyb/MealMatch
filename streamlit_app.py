@@ -132,31 +132,60 @@ st.write(
     "based on your preferences and lifestyle."
 )
 
-# Preview available MealMatch recipes
+# MealMatch: Filter and Explore Recipes
 
 st.divider()
-st.header("🍽️ Explore Our Meals")
-st.write("Here are some of the meals available in MealMatch.")
+st.header("🍽️ Meals That Match You")
+st.write("Recipes that fit your preferences.")
 
-st.write(f"**{len(meals)} recipes available**")
+# Start with all meals
+filtered_meals = meals.copy()
 
-for _, meal in meals.head(5).iterrows():
-    with st.expander(str(meal["Meal Name"])):
-        col1, col2 = st.columns(2)
+# Convert cost and time to numbers for filtering
+filtered_meals["Cost Number"] = pd.to_numeric(
+    filtered_meals["Ingredient Cost"]
+    .astype(str)
+    .str.replace("$", "", regex=False),
+    errors="coerce"
+)
 
-        with col1:
-            st.write("**Ingredient Cost**")
-            st.write(meal.get("Ingredient Cost", "Not available"))
+filtered_meals["Time Number"] = pd.to_numeric(
+    filtered_meals["Total Time"]
+    .astype(str)
+    .str.extract(r"(\d+)")[0],
+    errors="coerce"
+)
 
-            st.write("**Total Time**")
-            st.write(meal.get("Total Time", "Not available"))
+# Apply budget and cooking-time preferences
+filtered_meals = filtered_meals[
+    (filtered_meals["Cost Number"] <= budget)
+    & (filtered_meals["Time Number"] <= max_time)
+]
 
-        with col2:
-            st.write("**Calories**")
-            st.write(meal.get("Calories", "Not available"))
+st.write(f"**{len(filtered_meals)} matching recipes found**")
 
-            st.write("**Protein**")
-            st.write(meal.get("Protein", "Not available"))
+if filtered_meals.empty:
+    st.info(
+        "No meals match your current budget and cooking time. "
+        "Try adjusting your preferences in the sidebar."
+    )
 
-        st.write("**Cooking Instructions**")
-        st.write(meal.get("Cooking Instructions", "Not available"))
+else:
+    for _, meal in filtered_meals.iterrows():
+        with st.expander(str(meal["Meal Name"])):
+            col1, col2 = st.columns(2)
+
+            with col1:
+                st.write("**Ingredient Cost**")
+                st.write(f"${meal['Cost Number']:.2f}")
+                st.write("**Total Time**")
+                st.write(f"{int(meal['Time Number'])} minutes")
+
+            with col2:
+                st.write("**Calories**")
+                st.write(meal.get("Calories", "Not available"))
+                st.write("**Protein**")
+                st.write(meal.get("Protein", "Not available"))
+
+            st.write("**Cooking Instructions**")
+            st.write(meal.get("Cooking Instructions", "Not available"))
