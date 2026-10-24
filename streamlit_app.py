@@ -140,7 +140,7 @@ with st.sidebar:
         placeholder="e.g., seafood, mushrooms"
     )
 
-st.subheader("Nutrition Goals")
+    st.subheader("Nutrition Goals")
 
     use_calorie_limit = st.checkbox(
         "Set a maximum calorie limit",
@@ -157,6 +157,22 @@ st.subheader("Nutrition Goals")
         )
     else:
         max_calories = None
+
+    use_protein_goal = st.checkbox(
+        "Set a minimum protein goal",
+        value=False
+    )
+
+    if use_protein_goal:
+        min_protein = st.number_input(
+            "Minimum protein per serving (g)",
+            min_value=1,
+            max_value=150,
+            value=20,
+            step=5
+        )
+    else:
+        min_protein = None
 
     use_protein_goal = st.checkbox(
         "Set a minimum protein goal",
