@@ -131,3 +131,32 @@ st.write(
     "Welcome to MealMatch! Find affordable meals "
     "based on your preferences and lifestyle."
 )
+
+# Preview available MealMatch recipes
+
+st.divider()
+st.header("🍽️ Explore Our Meals")
+st.write("Here are some of the meals available in MealMatch.")
+
+st.write(f"**{len(meals)} recipes available**")
+
+for _, meal in meals.head(5).iterrows():
+    with st.expander(str(meal["Meal Name"])):
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.write("**Ingredient Cost**")
+            st.write(meal.get("Ingredient Cost", "Not available"))
+
+            st.write("**Total Time**")
+            st.write(meal.get("Total Time", "Not available"))
+
+        with col2:
+            st.write("**Calories**")
+            st.write(meal.get("Calories", "Not available"))
+
+            st.write("**Protein**")
+            st.write(meal.get("Protein", "Not available"))
+
+        st.write("**Cooking Instructions**")
+        st.write(meal.get("Cooking Instructions", "Not available"))
