@@ -9,11 +9,15 @@ APP_DIR = Path(__file__).parent
 @st.cache_data
 def load_meal_data():
     meals = pd.read_csv(
-        APP_DIR / "Rizaly Barlam - MealMatch CSV(Meals).csv"
+        APP_DIR / "Rizaly Barlam - MealMatch CSV(Meals).csv",
+        encoding="cp1252"
     )
+
     ingredients = pd.read_csv(
-        APP_DIR / "Rizaly Barlam - MealMatch CSV(Ingredients).csv"
+        APP_DIR / "Rizaly Barlam - MealMatch CSV(Ingredients).csv",
+        encoding="cp1252"
     )
+
     return meals, ingredients
 
 meals, ingredients = load_meal_data()
