@@ -70,20 +70,29 @@ with st.sidebar:
     st.write("Customize your meal recommendations.")
 
     st.subheader("Budget")
+
     budget = st.slider(
         "Budget per meal ($)",
         min_value=1,
-        max_value=50,
+        max_value=30,
         value=10
     )
 
-    weekly_budget = st.slider(
-        "Weekly budget ($)",
-        min_value=10,
-        max_value=200,
-        value=30,
-        step=5
+    use_weekly_budget = st.checkbox(
+        "Set a weekly budget",
+        value=False
     )
+
+    if use_weekly_budget:
+        weekly_budget = st.slider(
+            "Weekly budget ($)",
+            min_value=10,
+            max_value=200,
+            value=30,
+            step=5
+        )
+    else:
+        weekly_budget = None
 
     st.subheader("Cooking")
     max_time = st.slider(
