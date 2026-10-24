@@ -73,7 +73,7 @@ with st.sidebar:
     budget = st.slider(
         "Budget per meal ($)",
         min_value=1,
-        max_value=30,
+        max_value=50,
         value=10
     )
 
