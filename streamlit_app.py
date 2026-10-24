@@ -94,7 +94,7 @@ with st.sidebar:
     else:
         weekly_budget = None
 
- st.subheader("Cooking")
+    st.subheader("Cooking")
 
     use_time_limit = st.checkbox(
         "Set a maximum cooking time",
@@ -140,22 +140,39 @@ with st.sidebar:
         placeholder="e.g., seafood, mushrooms"
     )
 
-    st.subheader("Nutrition Goals")
-    max_calories = st.number_input(
-        "Maximum calories per serving (0 = no limit)",
-        min_value=0,
-        max_value=2000,
-        value=0,
-        step=50
+ st.subheader("Nutrition Goals")
+
+    use_calorie_limit = st.checkbox(
+        "Set a maximum calorie limit",
+        value=False
     )
 
-    min_protein = st.number_input(
-        "Minimum protein per serving (g)",
-        min_value=0,
-        max_value=150,
-        value=0,
-        step=5
+    if use_calorie_limit:
+        max_calories = st.number_input(
+            "Maximum calories per serving",
+            min_value=50,
+            max_value=2000,
+            value=500,
+            step=50
+        )
+    else:
+        max_calories = None
+
+    use_protein_goal = st.checkbox(
+        "Set a minimum protein goal",
+        value=False
     )
+
+    if use_protein_goal:
+        min_protein = st.number_input(
+            "Minimum protein per serving (g)",
+            min_value=1,
+            max_value=150,
+            value=20,
+            step=5
+        )
+    else:
+        min_protein = None
 
 st.title("🥗 MealMatch")
 st.subheader("Meals that match your budget, schedule, and taste.")
