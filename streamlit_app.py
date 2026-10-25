@@ -234,6 +234,45 @@ if max_time is not None:
         filtered_meals["Time Number"] <= max_time
     ]
 
+if max_calories is not None:
+    filtered_meals = filtered_meals[
+        pd.to_numeric(filtered_meals["Calories"], errors="coerce")
+        <= max_calories
+    ]
+
+if min_protein is not None:
+    filtered_meals = filtered_meals[
+        pd.to_numeric(
+            filtered_meals["Protein"].astype(str).str.replace("g", "", regex=False),
+            errors="coerce"
+        ) >= min_protein
+    ]
+
+if food_preferences.strip():
+    foods_to_avoid = [
+        food.strip().lower()
+        for food in food_preferences.split(",")
+        if food.strip()
+    ]
+
+    def contains_avoided_food(meal):
+        meal_name = str(meal.get("Meal Name", "")).lower()
+        ingredients_text = ingredients[
+            ingredients["Meal Name"].astype(str).str.lower()
+            == meal_name
+        ]["Ingredients"].astype(str).str.lower().tolist()
+
+        all_ingredients = " ".join(ingredients_text)
+
+        return any(
+            food in meal_name or food in all_ingredients
+            for food in foods_to_avoid
+        )
+
+    filtered_meals = filtered_meals[
+        ~filtered_meals.apply(contains_avoided_food, axis=1)
+    ]
+
 st.write(f"**{len(filtered_meals)} matching recipes found**")
 
 if filtered_meals.empty:
