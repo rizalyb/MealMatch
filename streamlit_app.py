@@ -174,23 +174,6 @@ with st.sidebar:
     else:
         min_protein = None
 
-    use_protein_goal = st.checkbox(
-        "Set a minimum protein goal",
-        value=False,
-        key="use_protein_goal_checkbox"
-    )
-
-    if use_protein_goal:
-        min_protein = st.number_input(
-            "Minimum protein per serving (g)",
-            min_value=1,
-            max_value=150,
-            value=20,
-            step=5
-        )
-    else:
-        min_protein = None
-
 st.title("🥗 MealMatch")
 st.subheader("Meals that match your budget, schedule, and taste.")
 
