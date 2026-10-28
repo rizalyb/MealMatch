@@ -274,7 +274,7 @@ if filtered_meals.empty:
 else:
     st.subheader("Your Weekly Meal Plan")
 
-   # Save the meal plan so it stays the same during interactions
+  # Save the meal plan so it stays the same during interactions
 if "meal_plan" not in st.session_state:
     st.session_state.meal_plan = filtered_meals.sample(
         n=plan_days,
@@ -283,12 +283,11 @@ if "meal_plan" not in st.session_state:
 
 meal_plan = st.session_state.meal_plan
 
+total_plan_cost = 0
 
-    total_plan_cost = 0
-
-    for day_index, (_, meal) in enumerate(meal_plan.iterrows(), start=1):
-        meal_cost = meal["Cost Number"]
-        total_plan_cost += meal_cost
+for day_index, (_, meal) in enumerate(meal_plan.iterrows(), start=1):
+    meal_cost = meal["Cost Number"]
+    total_plan_cost += meal_cost
 
         with st.expander(
             f"Day {day_index}: {meal['Meal Name']}",
