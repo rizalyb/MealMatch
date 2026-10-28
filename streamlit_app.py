@@ -267,26 +267,58 @@ st.write(f"**{len(filtered_meals)} matching recipes found**")
 
 if filtered_meals.empty:
     st.info(
-        "No meals match your current budget and cooking time. "
+        "No meals match your current preferences. "
         "Try adjusting your preferences in the sidebar."
     )
 
 else:
-    for _, meal in filtered_meals.iterrows():
-        with st.expander(str(meal["Meal Name"])):
+    st.subheader("Your Weekly Meal Plan")
+
+    # Select meals automatically for the chosen number of days
+    meal_plan = filtered_meals.sample(
+        n=plan_days,
+        replace=len(filtered_meals) < plan_days
+    ).reset_index(drop=True)
+
+    total_plan_cost = 0
+
+    for day_index, (_, meal) in enumerate(meal_plan.iterrows(), start=1):
+        meal_cost = meal["Cost Number"]
+        total_plan_cost += meal_cost
+
+        with st.expander(
+            f"Day {day_index}: {meal['Meal Name']}",
+            expanded=True
+        ):
             col1, col2 = st.columns(2)
 
             with col1:
                 st.write("**Ingredient Cost**")
-                st.write(f"${meal['Cost Number']:.2f}")
+                st.write(f"${meal_cost:.2f}")
+
                 st.write("**Total Time**")
                 st.write(f"{int(meal['Time Number'])} minutes")
 
             with col2:
                 st.write("**Calories**")
                 st.write(meal.get("Calories", "Not available"))
+
                 st.write("**Protein**")
                 st.write(meal.get("Protein", "Not available"))
 
             st.write("**Cooking Instructions**")
             st.write(meal.get("Cooking Instructions", "Not available"))
+
+    st.divider()
+    st.subheader("Meal Plan Summary")
+    st.write(f"**Planned days:** {len(meal_plan)}")
+    st.write(f"**Estimated ingredient cost:** ${total_plan_cost:.2f}")
+
+    if weekly_budget is not None:
+        if total_plan_cost <= weekly_budget:
+            st.success("Your meal plan is within your weekly budget!")
+        else:
+            st.warning(
+                "Your meal plan exceeds your weekly budget. "
+                "Try adjusting your preferences."
+            )
