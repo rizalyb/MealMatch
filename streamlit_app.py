@@ -217,11 +217,11 @@ if max_time is not None:
         filtered_meals["Time Number"] <= max_time
     ]
 
-if dietary_restriction != "None":
+if dietary_restrictions != "None":
     filtered_meals = filtered_meals[
         filtered_meals["Dietary Type"]
         .astype(str)
-        .str.contains(dietary_restriction, case=False, na=False)
+        .str.contains(dietary_restrictions, case=False, na=False)
     ]
 
 if max_calories is not None:
