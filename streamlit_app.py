@@ -274,11 +274,15 @@ if filtered_meals.empty:
 else:
     st.subheader("Your Weekly Meal Plan")
 
-    # Select meals automatically for the chosen number of days
-    meal_plan = filtered_meals.sample(
+   # Save the meal plan so it stays the same during interactions
+if "meal_plan" not in st.session_state:
+    st.session_state.meal_plan = filtered_meals.sample(
         n=plan_days,
         replace=len(filtered_meals) < plan_days
     ).reset_index(drop=True)
+
+meal_plan = st.session_state.meal_plan
+
 
     total_plan_cost = 0
 
