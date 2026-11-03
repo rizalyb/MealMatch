@@ -1,3 +1,4 @@
+import re
 import streamlit as st
 import pandas as pd
 from pathlib import Path
@@ -302,14 +303,17 @@ if (
     st.session_state.meal_plan_preferences = current_preferences
 
 meal_plan = st.session_state.meal_plan
+
 # Calculate adjusted servings and costs
 meal_plan = meal_plan.copy()
 
+# Use the higher number for serving ranges
+def get_original_servings(value):
+    numbers = re.findall(r"\d+", str(value))
+    return max(map(int, numbers)) if numbers else 1
+
 meal_plan["Original Servings"] = (
-    meal_plan["Servings"]
-    .astype(str)
-    .str.extract(r"(\d+)")
-    .astype(float)
+    meal_plan["Servings"].apply(get_original_servings)
 )
 
 meal_plan["Original Servings"] = (
@@ -420,3 +424,59 @@ if weekly_budget is not None:
             "Your meal plan exceeds your weekly budget. "
             "Try adjusting your preferences."
         )
+
+st.divider()
+st.subheader("🛒 Your Grocery List")
+
+grocery_items = []
+
+for _, meal in meal_plan.iterrows():
+
+    meal_ingredients = ingredients[
+        ingredients["Meal Name"] == meal["Meal Name"]
+    ]
+
+    scaling_factor = meal["Scaling Factor"]
+
+    st.write(f"**{meal['Meal Name']}**")
+
+    for _, item in meal_ingredients.iterrows():
+
+        original_quantity = str(item["Quantity"]).strip()
+        unit = item["Unit"]
+        
+        # Adjust ingredient quantities when numeric
+        try:
+            quantity_number = float(original_quantity)
+            adjusted_quantity = quantity_number * scaling_factor
+
+            if adjusted_quantity.is_integer():
+                quantity_display = str(int(adjusted_quantity))
+            else:
+                quantity_display = f"{adjusted_quantity:.2f}".rstrip("0").rstrip(".")
+
+        except (ValueError, TypeError):
+            quantity_display = original_quantity
+
+        unit_display = "" if pd.isna(unit) else str(unit)
+
+        st.write(
+            f"- {item['Ingredients']}: "
+            f"{quantity_display} {unit_display}"
+        )
+
+        # Calculate adjusted ingredient cost
+        cost = pd.to_numeric(
+            str(item["Estimated Cost"]).replace("$", ""),
+            errors="coerce"
+        )
+
+        if pd.notna(cost):
+            grocery_items.append(cost * scaling_factor)
+
+if grocery_items:
+    st.divider()
+    st.write(
+        f"**Estimated cost of ingredients used: "
+        f"${sum(grocery_items):.2f}**"
+    )
