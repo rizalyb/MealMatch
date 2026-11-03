@@ -274,15 +274,32 @@ if filtered_meals.empty:
 else:
     st.subheader("Your Weekly Meal Plan")
 
-# Save the meal plan and update it when the selected days change
+# Track preference changes so the meal plan refreshes when needed
+current_preferences = (
+    budget,
+    weekly_budget,
+    max_time,
+    desired_servings,
+    plan_days,
+    dietary_restrictions,
+    food_preferences.strip().lower(),
+    max_calories,
+    min_protein
+)
+
+# Generate a new plan when preferences change
 if (
     "meal_plan" not in st.session_state
+    or "meal_plan_preferences" not in st.session_state
+    or st.session_state.meal_plan_preferences != current_preferences
     or len(st.session_state.meal_plan) != plan_days
 ):
     st.session_state.meal_plan = filtered_meals.sample(
         n=plan_days,
         replace=len(filtered_meals) < plan_days
     ).reset_index(drop=True)
+
+    st.session_state.meal_plan_preferences = current_preferences
 
 meal_plan = st.session_state.meal_plan
 
