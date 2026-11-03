@@ -302,11 +302,44 @@ if (
     st.session_state.meal_plan_preferences = current_preferences
 
 meal_plan = st.session_state.meal_plan
+# Calculate adjusted servings and costs
+meal_plan = meal_plan.copy()
 
+meal_plan["Original Servings"] = (
+    meal_plan["Servings"]
+    .astype(str)
+    .str.extract(r"(\d+)")
+    .astype(float)
+)
+
+meal_plan["Original Servings"] = (
+    meal_plan["Original Servings"].fillna(1)
+)
+
+meal_plan["Scaling Factor"] = (
+    desired_servings / meal_plan["Original Servings"]
+)
+
+meal_plan["Adjusted Cost"] = (
+    meal_plan["Cost Number"] * meal_plan["Scaling Factor"]
+)
+
+meal_plan["Adjusted Calories"] = (
+    pd.to_numeric(meal_plan["Calories"], errors="coerce")
+    * meal_plan["Scaling Factor"]
+)
+
+meal_plan["Adjusted Protein"] = (
+    pd.to_numeric(
+        meal_plan["Protein"].astype(str).str.replace("g", "", regex=False),
+        errors="coerce"
+    )
+    * meal_plan["Scaling Factor"]
+)
 total_plan_cost = 0
 
 for day_index, (_, meal) in enumerate(meal_plan.iterrows(), start=1):
-    meal_cost = meal["Cost Number"]
+    meal_cost = meal["Adjusted Cost"]
     total_plan_cost += meal_cost
 
     with st.expander(
@@ -317,6 +350,8 @@ for day_index, (_, meal) in enumerate(meal_plan.iterrows(), start=1):
 
         with col1:
             st.write("**Ingredient Cost**")
+            st.write("**Servings**")
+            st.write(f"{desired_servings} people")
             st.write(f"${meal_cost:.2f}")
             st.write("**Total Time**")
             st.write(f"{int(meal['Time Number'])} minutes")
