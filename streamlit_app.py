@@ -427,6 +427,79 @@ if weekly_budget is not None:
 
 st.divider()
 st.subheader("🛒 Your Grocery List")
+st.write("Ingredients needed for your selected meal plan.")
+
+grocery_total = 0
+
+for day_index, (_, meal) in enumerate(meal_plan.iterrows(), start=1):
+
+    meal_ingredients = ingredients[
+        ingredients["Meal Name"].astype(str).str.strip()
+        == str(meal["Meal Name"]).strip()
+    ]
+
+    scaling_factor = meal["Scaling Factor"]
+
+    with st.expander(
+        f"Day {day_index}: {meal['Meal Name']}",
+        expanded=False
+    ):
+        if not meal_ingredients.empty:
+
+            grocery_display = []
+
+            for _, item in meal_ingredients.iterrows():
+
+                original_quantity = str(item["Quantity"]).strip()
+                unit = item["Unit"]
+
+                try:
+                    quantity_number = float(original_quantity)
+                    adjusted_quantity = quantity_number * scaling_factor
+
+                    if adjusted_quantity.is_integer():
+                        quantity_display = str(int(adjusted_quantity))
+                    else:
+                        quantity_display = (
+                            f"{adjusted_quantity:.2f}"
+                            .rstrip("0").rstrip(".")
+                        )
+
+                except (ValueError, TypeError):
+                    quantity_display = original_quantity
+
+                unit_display = "" if pd.isna(unit) else str(unit)
+
+                grocery_display.append({
+                    "Ingredient": item["Ingredients"],
+                    "Quantity": f"{quantity_display} {unit_display}".strip()
+                })
+
+                cost = pd.to_numeric(
+                    str(item["Estimated Cost"]).replace("$", ""),
+                    errors="coerce"
+                )
+
+                if pd.notna(cost):
+                    grocery_total += cost * scaling_factor
+
+            grocery_table = pd.DataFrame(grocery_display)
+
+            st.dataframe(
+                grocery_table,
+                hide_index=True,
+                use_container_width=True
+            )
+
+        else:
+            st.info("No ingredient information found for this meal.")
+
+st.divider()
+st.subheader("Grocery Cost Summary")
+st.metric(
+    "Estimated cost of ingredients used",
+    f"${grocery_total:.2f}"
+)
 
 grocery_items = []
 
