@@ -440,10 +440,10 @@ for day_index, (_, meal) in enumerate(meal_plan.iterrows(), start=1):
 
     scaling_factor = meal["Scaling Factor"]
 
-    with st.expander(
-        f"Day {day_index}: {meal['Meal Name']}",
-        expanded=False
-    ):
+    with st.container(border=True):
+
+        st.markdown(f"### Day {day_index}: {meal['Meal Name']}")
+
         if not meal_ingredients.empty:
 
             grocery_display = []
@@ -472,7 +472,7 @@ for day_index, (_, meal) in enumerate(meal_plan.iterrows(), start=1):
 
                 grocery_display.append({
                     "Ingredient": item["Ingredients"],
-                    "Quantity": f"{quantity_display} {unit_display}".strip()
+                    "Quantity Needed": f"{quantity_display} {unit_display}".strip()
                 })
 
                 cost = pd.to_numeric(
@@ -495,7 +495,9 @@ for day_index, (_, meal) in enumerate(meal_plan.iterrows(), start=1):
             st.info("No ingredient information found for this meal.")
 
 st.divider()
+
 st.subheader("Grocery Cost Summary")
+
 st.metric(
     "Estimated cost of ingredients used",
     f"${grocery_total:.2f}"
