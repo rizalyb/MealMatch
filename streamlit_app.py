@@ -310,6 +310,48 @@ for day_index, (_, meal) in enumerate(meal_plan.iterrows(), start=1):
         st.write("**Cooking Instructions**")
         st.write(meal.get("Cooking Instructions", "Not available"))
 
+        # Allow users to view alternative meals
+        show_options = st.checkbox(
+            "Show more meal options",
+            key=f"show_options_{day_index}_{meal['Meal Name']}"
+        )
+
+        if show_options:
+            # Exclude meals already assigned to other days
+            other_meals = meal_plan[
+                meal_plan.index != day_index - 1
+            ]["Meal Name"].tolist()
+
+            available_options = filtered_meals[
+                (~filtered_meals["Meal Name"].isin(other_meals))
+                & (filtered_meals["Meal Name"] != meal["Meal Name"])
+            ]
+
+            if not available_options.empty:
+                option_names = available_options["Meal Name"].tolist()
+
+                selected_meal = st.selectbox(
+                    "Choose an alternative meal:",
+                    option_names,
+                    key=f"replacement_{day_index}_{meal['Meal Name']}"
+                )
+
+                if st.button(
+                    "Use this meal",
+                    key=f"replace_{day_index}_{meal['Meal Name']}"
+                ):
+                    replacement = available_options[
+                        available_options["Meal Name"] == selected_meal
+                    ].iloc[0]
+
+                    st.session_state.meal_plan.loc[
+                        day_index - 1
+                    ] = replacement
+
+                    st.rerun()
+            else:
+                st.info("No other matching meals are available.")
+
 st.divider()
 st.subheader("Meal Plan Summary")
 st.write(f"**Planned days:** {len(meal_plan)}")
