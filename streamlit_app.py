@@ -274,8 +274,11 @@ if filtered_meals.empty:
 else:
     st.subheader("Your Weekly Meal Plan")
 
-# Save the meal plan so it stays the same during interactions
-if "meal_plan" not in st.session_state:
+# Save the meal plan and update it when the selected days change
+if (
+    "meal_plan" not in st.session_state
+    or len(st.session_state.meal_plan) != plan_days
+):
     st.session_state.meal_plan = filtered_meals.sample(
         n=plan_days,
         replace=len(filtered_meals) < plan_days
