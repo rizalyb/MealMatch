@@ -149,10 +149,16 @@ if grocery_display:
 
         if checked:
             st.markdown(
-                f"<style>"
-                f"div[data-testid='stCheckbox']:has(input[aria-checked='true']) "
-                f"{{ text-decoration: line-through; }}"
-                f"</style>",
+                f"""
+                <style>
+                div[data-testid="stCheckbox"]:has(
+                    input[aria-checked="true"]
+                ) label {{
+                    text-decoration: line-through;
+                    color: gray;
+                }}
+                </style>
+                """,
                 unsafe_allow_html=True
             )
 
