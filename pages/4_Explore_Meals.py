@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 
@@ -61,9 +60,19 @@ def show_number(value, unit=""):
         return "Not listed"
 
     try:
-        number = float(
-            str(value).replace("$", "").replace(",", "").strip()
+        # Remove existing units and formatting
+        cleaned_value = (
+            str(value)
+            .replace("$", "")
+            .replace(",", "")
+            .replace("mg", "")
+            .replace("g", "")
+            .replace("min.", "")
+            .replace("min", "")
+            .strip()
         )
+
+        number = float(cleaned_value)
 
         if number.is_integer():
             return f"{int(number)}{unit}"
@@ -71,7 +80,7 @@ def show_number(value, unit=""):
         return f"{number:g}{unit}"
 
     except (ValueError, TypeError):
-        return f"{value}{unit}"
+        return str(value).strip()
 
 
 # DISPLAY EACH MEAL
@@ -80,9 +89,7 @@ for _, meal in display_meals.iterrows():
 
     meal_name = str(meal["Meal Name"]).strip()
 
-    total_time = show_number(meal["Total Time"])
-    if total_time != "Not listed":
-        total_time = total_time.replace(" min", "").replace("min", "") + " min"
+    total_time = show_number(meal["Total Time"], " min")
 
     ingredient_cost = show_number(
         meal["Ingredient Cost"]
@@ -116,13 +123,13 @@ for _, meal in display_meals.iterrows():
         with col2:
             st.metric(
                 "Preparation Time",
-                show_number(meal["Prep Time"])
+                show_number(meal["Prep Time"], " min")
             )
 
         with col3:
             st.metric(
                 "Cooking Time",
-                show_number(meal["Cooking Time"])
+                show_number(meal["Cooking Time"], " min")
             )
 
         col1, col2 = st.columns(2)
