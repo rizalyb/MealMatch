@@ -29,12 +29,18 @@ with col1:
         "explore alternatives, and organize your weekly meals."
     )
 
+    if st.button("Open Meal Planner", use_container_width=True):
+        st.switch_page("pages/4_Meal_Planner.py")
+
 with col2:
     st.subheader("🛒 Grocery List")
     st.write(
         "View your combined ingredients and the quantities "
         "needed for your selected meals."
     )
+
+    if st.button("Open Grocery List", use_container_width=True):
+        st.switch_page("pages/4_Grocery_List.py")
 
 st.divider()
 
