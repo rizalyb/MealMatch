@@ -14,13 +14,14 @@ st.set_page_config(
 APP_DIR = Path(__file__).parent
 
 
+
 # GLOBAL MEALMATCH DESIGN
 
 st.markdown(
     """
     <style>
 
-    /* THEME COLORS */
+    /* LIGHT MODE */
 
     :root {
         --mm-green: #426548;
@@ -30,17 +31,13 @@ st.markdown(
         --mm-border: #D5DEC9;
     }
 
-    /* LIGHT MODE */
-
     [data-testid="stAppViewContainer"] {
-        background-color: var(--mm-cream);
+        background-color: #F8F7F0;
+        color: #294B35;
     }
 
     [data-testid="stSidebar"] {
-        background-color: var(--mm-light-green);
-    }
-
-    [data-testid="stSidebar"] * {
+        background-color: #E8EEDF;
         color: #294B35;
     }
 
@@ -50,7 +47,11 @@ st.markdown(
         color: #294B35;
     }
 
-    /* MAIN CONTENT */
+    [data-testid="stSidebar"] [data-testid="stExpander"] {
+        background-color: #F4F5ED;
+        border: 1px solid #D5DEC9;
+        border-radius: 12px;
+    }
 
     .block-container {
         padding-top: 2rem;
@@ -58,49 +59,20 @@ st.markdown(
         max-width: 1250px;
     }
 
-    /* SIDEBAR EXPANDERS */
-
-    [data-testid="stSidebar"] [data-testid="stExpander"] {
-        background-color: #F4F5ED;
-        border: 1px solid #D5DEC9;
-        border-radius: 12px;
-    }
-
-    /* SLIDERS */
-
     [data-testid="stSlider"] [data-testid="stThumbValue"] {
-        color: inherit !important;
-        font-weight: 700 !important;
         opacity: 1 !important;
         visibility: visible !important;
+        font-weight: 700 !important;
     }
-
-    [data-testid="stSlider"] [data-testid="stTickBar"] {
-        color: inherit !important;
-    }
-
-    /* INPUT LABELS */
-
-    [data-testid="stSidebar"] label {
-        font-weight: 500;
-    }
-
-    [data-testid="stSidebar"] input {
-        color: inherit !important;
-    }
-
-    /* CARDS */
 
     [data-testid="stVerticalBlockBorderWrapper"] {
-        border-color: var(--mm-border);
+        border-color: #D5DEC9;
         border-radius: 14px;
     }
 
-    /* BUTTONS */
-
     .stButton button,
     .stLinkButton a {
-        background-color: var(--mm-green);
+        background-color: #426548;
         color: white !important;
         border: none;
         border-radius: 10px;
@@ -108,81 +80,145 @@ st.markdown(
 
     .stButton button:hover,
     .stLinkButton a:hover {
-        background-color: var(--mm-dark-green);
+        background-color: #294B35;
         color: white !important;
     }
 
-    /* DIVIDERS */
-
     hr {
-        border-color: var(--mm-border);
+        border-color: #D5DEC9;
     }
+
 
     /* DARK MODE */
 
     [data-theme="dark"] [data-testid="stAppViewContainer"],
     [data-theme="dark"] .stApp {
-        background-color: #18251D;
+        background-color: #17251D !important;
+        color: #E8EFE6 !important;
     }
 
-    [data-theme="dark"] [data-testid="stSidebar"] {
-        background-color: #223329;
+    [data-theme="dark"] [data-testid="stMain"],
+    [data-theme="dark"] [data-testid="stMainBlockContainer"] {
+        background-color: #17251D !important;
+        color: #E8EFE6 !important;
     }
 
-    [data-theme="dark"] [data-testid="stSidebar"] * {
-        color: #E5EDE2;
-    }
+    /* MAIN TEXT */
 
     [data-theme="dark"] [data-testid="stAppViewContainer"] h1,
     [data-theme="dark"] [data-testid="stAppViewContainer"] h2,
-    [data-theme="dark"] [data-testid="stAppViewContainer"] h3 {
-        color: #DCE9D9;
+    [data-theme="dark"] [data-testid="stAppViewContainer"] h3,
+    [data-theme="dark"] [data-testid="stAppViewContainer"] p,
+    [data-theme="dark"] [data-testid="stAppViewContainer"] li,
+    [data-theme="dark"] [data-testid="stAppViewContainer"] label,
+    [data-theme="dark"] [data-testid="stAppViewContainer"] strong,
+    [data-theme="dark"] [data-testid="stAppViewContainer"] [data-testid="stMarkdownContainer"],
+    [data-theme="dark"] [data-testid="stAppViewContainer"] [data-testid="stCaptionContainer"] {
+        color: #E8EFE6 !important;
     }
 
-    [data-theme="dark"] [data-testid="stAppViewContainer"] p {
-        color: #D0DBCE;
+    /* SIDEBAR */
+
+    [data-theme="dark"] [data-testid="stSidebar"] {
+        background-color: #24372B !important;
+        color: #E8EFE6 !important;
     }
 
+    [data-theme="dark"] [data-testid="stSidebar"] h1,
+    [data-theme="dark"] [data-testid="stSidebar"] h2,
+    [data-theme="dark"] [data-testid="stSidebar"] h3,
+    [data-theme="dark"] [data-testid="stSidebar"] p,
+    [data-theme="dark"] [data-testid="stSidebar"] label,
+    [data-theme="dark"] [data-testid="stSidebar"] span,
+    [data-theme="dark"] [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] {
+        color: #E8EFE6 !important;
+    }
+
+    /* EXPANDERS AND CARDS */
+
+    [data-theme="dark"] [data-testid="stExpander"],
     [data-theme="dark"] [data-testid="stSidebar"] [data-testid="stExpander"] {
-        background-color: #2C4032;
-        border-color: #465B49;
+        background-color: #304638 !important;
+        border: 1px solid #506653 !important;
+        border-radius: 12px;
     }
 
     [data-theme="dark"] [data-testid="stVerticalBlockBorderWrapper"] {
-        border-color: #465B49;
+        background-color: #223329 !important;
+        border-color: #506653 !important;
     }
+
+    /* INPUT FIELDS */
+
+    [data-theme="dark"] input,
+    [data-theme="dark"] textarea,
+    [data-theme="dark"] [data-baseweb="select"] > div {
+        background-color: #304638 !important;
+        color: #F0F4ED !important;
+        border-color: #607764 !important;
+    }
+
+    [data-theme="dark"] input::placeholder,
+    [data-theme="dark"] textarea::placeholder {
+        color: #C0CEBE !important;
+    }
+
+    /* CHECKBOXES, RADIO BUTTONS, AND SLIDERS */
+
+    [data-theme="dark"] [data-testid="stCheckbox"],
+    [data-theme="dark"] [data-testid="stRadio"],
+    [data-theme="dark"] [data-testid="stSlider"],
+    [data-theme="dark"] [data-testid="stSelectbox"],
+    [data-theme="dark"] [data-testid="stNumberInput"] {
+        color: #E8EFE6 !important;
+    }
+
+    [data-theme="dark"] [data-testid="stSlider"] [data-testid="stThumbValue"] {
+        color: #F0F4ED !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+
+    /* ALERTS AND NOTICES */
+
+    [data-theme="dark"] [data-testid="stAlert"] {
+        background-color: #304638 !important;
+        color: #F0F4ED !important;
+    }
+
+    [data-theme="dark"] [data-testid="stAlert"] p,
+    [data-theme="dark"] [data-testid="stAlert"] span {
+        color: #F0F4ED !important;
+    }
+
+    /* BUTTONS */
+
+    [data-theme="dark"] .stButton button,
+    [data-theme="dark"] .stLinkButton a {
+        background-color: #58765B !important;
+        color: #FFFFFF !important;
+        border: 1px solid #789278 !important;
+    }
+
+    [data-theme="dark"] .stButton button:hover,
+    [data-theme="dark"] .stLinkButton a:hover {
+        background-color: #6B896D !important;
+    }
+
+    /* DIVIDERS AND HEADER */
 
     [data-theme="dark"] hr {
-        border-color: #465B49;
+        border-color: #506653 !important;
     }
-
-    [data-theme="dark"] [data-testid="stSlider"] {
-        color: #E5EDE2;
-    }
-
-    [data-theme="dark"] [data-testid="stSidebar"] label {
-        color: #E5EDE2;
-    }
-
-    [data-theme="dark"] [data-testid="stSidebar"] input {
-        color: #E5EDE2 !important;
-    }
-
-    [data-theme="dark"] [data-testid="stAppViewContainer"] [data-testid="stAlert"] {
-        color: #E5EDE2;
-    }
-
-    /* REMOVE TOP HEADER BACKGROUND */
 
     [data-testid="stHeader"] {
-        background-color: transparent;
+        background-color: transparent !important;
     }
 
     </style>
     """,
     unsafe_allow_html=True
 )
-
 
 # LOAD CSV DATA
 
