@@ -14,13 +14,13 @@ home_page = st.Page(
 )
 
 planner_page = st.Page(
-    "pages/3_Meal_Planner.py",
+    "pages/2_Meal_Planner.py",
     title="Meal Planner",
     icon="🍽️"
 )
 
 grocery_page = st.Page(
-    "pages/4_Grocery_List.py",
+    "pages/3_Grocery_List.py",
     title="Grocery List",
     icon="🛒"
 )
