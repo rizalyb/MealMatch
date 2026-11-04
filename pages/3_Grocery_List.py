@@ -142,10 +142,19 @@ if grocery_display:
         ingredient = item["Ingredient"]
         quantity = item["Quantity Needed"]
 
-        st.checkbox(
+        checked = st.checkbox(
             f"{ingredient} | {quantity}",
             key=f"grocery_item_{index}"
         )
+
+        if checked:
+            st.markdown(
+                f"<style>"
+                f"div[data-testid='stCheckbox']:has(input[aria-checked='true']) "
+                f"{{ text-decoration: line-through; }}"
+                f"</style>",
+                unsafe_allow_html=True
+            )
 
     st.caption(
         f"{len(grocery_display)} unique ingredients "
