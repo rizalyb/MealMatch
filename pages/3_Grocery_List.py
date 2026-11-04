@@ -130,37 +130,73 @@ for item in combined_ingredients.values():
 
 # DISPLAY GROCERY LIST
 
+import streamlit.components.v1 as components
+import json
+
 st.divider()
+st.subheader("Ingredients Needed")
+st.write("Check off ingredients you already have.")
 
 if grocery_display:
 
-    st.subheader("Ingredients Needed")
-    st.write("Check off ingredients you already have.")
+    grocery_items = json.dumps(grocery_display)
 
-    for index, item in enumerate(grocery_display):
+    components.html(
+        f"""
+        <div id="grocery-list"></div>
 
-        ingredient = item["Ingredient"]
-        quantity = item["Quantity Needed"]
+        <style>
+            .grocery-item {{
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 9px 4px;
+                border-bottom: 1px solid #dddddd;
+                font-family: sans-serif;
+                font-size: 15px;
+                color: var(--text-color);
+            }}
 
-        checked = st.checkbox(
-            f"{ingredient} | {quantity}",
-            key=f"grocery_item_{index}"
-        )
+            .grocery-item input {{
+                width: 17px;
+                height: 17px;
+                cursor: pointer;
+            }}
 
-        if checked:
-            st.markdown(
-                f"""
-                <style>
-                div[data-testid="stCheckbox"]:has(
-                    input[aria-checked="true"]
-                ) label {{
-                    text-decoration: line-through;
-                    color: gray;
-                }}
-                </style>
-                """,
-                unsafe_allow_html=True
-            )
+            .grocery-item.checked span {{
+                text-decoration: line-through;
+                color: gray;
+            }}
+        </style>
+
+        <script>
+            const items = {grocery_items};
+            const container = document.getElementById("grocery-list");
+
+            items.forEach((item, index) => {{
+                const row = document.createElement("label");
+                row.className = "grocery-item";
+
+                const checkbox = document.createElement("input");
+                checkbox.type = "checkbox";
+
+                const text = document.createElement("span");
+                text.textContent =
+                    item["Ingredient"] + " | " + item["Quantity Needed"];
+
+                checkbox.addEventListener("change", function() {{
+                    row.classList.toggle("checked", checkbox.checked);
+                }});
+
+                row.appendChild(checkbox);
+                row.appendChild(text);
+                container.appendChild(row);
+            }});
+        </script>
+        """,
+        height=max(150, len(grocery_display) * 42 + 20),
+        scrolling=False
+    )
 
     st.caption(
         f"{len(grocery_display)} unique ingredients "
