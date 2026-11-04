@@ -80,7 +80,9 @@ for _, meal in display_meals.iterrows():
 
     meal_name = str(meal["Meal Name"]).strip()
 
-    total_time = show_number(meal["Total Time"], " min")
+    total_time = show_number(meal["Total Time"])
+    if total_time != "Not listed":
+        total_time = total_time.replace(" min", "").replace("min", "") + " min"
 
     ingredient_cost = show_number(
         meal["Ingredient Cost"]
@@ -114,13 +116,13 @@ for _, meal in display_meals.iterrows():
         with col2:
             st.metric(
                 "Preparation Time",
-                show_number(meal["Prep Time"], " min")
+                show_number(meal["Prep Time"])
             )
 
         with col3:
             st.metric(
                 "Cooking Time",
-                show_number(meal["Cooking Time"], " min")
+                show_number(meal["Cooking Time"])
             )
 
         col1, col2 = st.columns(2)
