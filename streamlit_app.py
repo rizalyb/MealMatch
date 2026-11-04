@@ -1,7 +1,8 @@
-import re
 import streamlit as st
 import pandas as pd
 from pathlib import Path
+import re
+from fractions import Fraction
 
 # Find the folder containing this app
 APP_DIR = Path(__file__).parent
@@ -411,7 +412,7 @@ for day_index, (_, meal) in enumerate(meal_plan.iterrows(), start=1):
             else:
                 st.info("No other matching meals are available.")
 
-st.divider()
+()
 st.subheader("Meal Plan Summary")
 st.write(f"**Planned days:** {len(meal_plan)}")
 st.write(f"**Estimated ingredient cost:** ${total_plan_cost:.2f}")
@@ -427,72 +428,114 @@ if weekly_budget is not None:
 
 st.divider()
 st.subheader("🛒 Your Grocery List")
-st.write("Ingredients needed for your selected meal plan.")
+st.write("Combined ingredients for all meals in your plan.")
 
-grocery_total = 0
+# Convert fractions and numbers into usable quantities
+def parse_quantity(value):
+    quantity = str(value).strip()
 
-for day_index, (_, meal) in enumerate(meal_plan.iterrows(), start=1):
+    try:
+        parts = quantity.split()
+
+        if len(parts) == 2 and "/" in parts[1]:
+            return float(Fraction(parts[0]) + Fraction(parts[1]))
+
+        return float(Fraction(quantity))
+
+    except (ValueError, ZeroDivisionError):
+        return None
+
+
+combined_ingredients = {}
+
+for _, meal in meal_plan.iterrows():
 
     meal_ingredients = ingredients[
-        ingredients["Meal Name"].astype(str).str.strip()
-        == str(meal["Meal Name"]).strip()
+        ingredients["Meal Name"].astype(str).str.strip().str.lower()
+        == str(meal["Meal Name"]).strip().lower()
     ]
 
     scaling_factor = meal["Scaling Factor"]
 
-    with st.container(border=True):
+    for _, item in meal_ingredients.iterrows():
 
-        st.markdown(f"### Day {day_index}: {meal['Meal Name']}")
+        ingredient_name = str(item["Ingredients"]).strip()
 
-        if not meal_ingredients.empty:
+        if pd.isna(item["Unit"]):
+            unit = ""
+        else:
+            unit = str(item["Unit"]).strip()
 
-            grocery_display = []
+        key = (ingredient_name.lower(), unit.lower())
 
-            for _, item in meal_ingredients.iterrows():
+        if key not in combined_ingredients:
+            combined_ingredients[key] = {
+                "Ingredient": ingredient_name,
+                "Unit": unit,
+                "Quantity": 0,
+                "Has Number": False,
+                "Other Notes": set()
+            }
 
-                original_quantity = str(item["Quantity"]).strip()
-                unit = item["Unit"]
+        quantity = parse_quantity(item["Quantity"])
 
-                try:
-                    quantity_number = float(original_quantity)
-                    adjusted_quantity = quantity_number * scaling_factor
-
-                    if adjusted_quantity.is_integer():
-                        quantity_display = str(int(adjusted_quantity))
-                    else:
-                        quantity_display = (
-                            f"{adjusted_quantity:.2f}"
-                            .rstrip("0").rstrip(".")
-                        )
-
-                except (ValueError, TypeError):
-                    quantity_display = original_quantity
-
-                unit_display = "" if pd.isna(unit) else str(unit)
-
-                grocery_display.append({
-                    "Ingredient": item["Ingredients"],
-                    "Quantity Needed": f"{quantity_display} {unit_display}".strip()
-                })
-
-                cost = pd.to_numeric(
-                    str(item["Estimated Cost"]).replace("$", ""),
-                    errors="coerce"
-                )
-
-                if pd.notna(cost):
-                    grocery_total += cost * scaling_factor
-
-            grocery_table = pd.DataFrame(grocery_display)
-
-            st.dataframe(
-                grocery_table,
-                hide_index=True,
-                use_container_width=True
+        if quantity is not None:
+            combined_ingredients[key]["Quantity"] += (
+                quantity * scaling_factor
+            )
+            combined_ingredients[key]["Has Number"] = True
+        else:
+            combined_ingredients[key]["Other Notes"].add(
+                str(item["Quantity"]).strip()
             )
 
+# Prepare the combined shopping list
+grocery_display = []
+
+for item in combined_ingredients.values():
+
+    if item["Has Number"]:
+        quantity = item["Quantity"]
+
+        if quantity.is_integer():
+            quantity_text = str(int(quantity))
         else:
-            st.info("No ingredient information found for this meal.")
+            quantity_text = (
+                f"{quantity:.2f}".rstrip("0").rstrip(".")
+            )
+    else:
+        quantity_text = ""
+
+    notes = ", ".join(sorted(item["Other Notes"]))
+
+    if notes:
+        quantity_text = (
+            f"{quantity_text}, {notes}"
+            if quantity_text else notes
+        )
+
+    grocery_display.append({
+        "Ingredient": item["Ingredient"],
+        "Quantity Needed": f"{quantity_text} {item['Unit']}".strip()
+    })
+
+if grocery_display:
+
+    grocery_table = pd.DataFrame(grocery_display)
+
+    st.dataframe(
+        grocery_table,
+        hide_index=True,
+        use_container_width=True
+    )
+
+    st.caption(
+        f"{len(grocery_display)} unique ingredient entries "
+        "for your selected meal plan."
+    )
+
+else:
+    st.info("No ingredients found for your selected meals.")
 
 grocery_items = []
 
