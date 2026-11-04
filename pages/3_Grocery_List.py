@@ -142,17 +142,10 @@ if grocery_display:
         ingredient = item["Ingredient"]
         quantity = item["Quantity Needed"]
 
-        checked = st.checkbox(
+        st.checkbox(
             f"{ingredient} | {quantity}",
             key=f"grocery_item_{index}"
         )
-
-        if checked:
-            st.markdown(
-                f"<span style='text-decoration: line-through; color: gray;'>"
-                f"{ingredient} | {quantity}</span>",
-                unsafe_allow_html=True
-            )
 
     st.caption(
         f"{len(grocery_display)} unique ingredients "
@@ -160,4 +153,4 @@ if grocery_display:
     )
 
 else:
-    st.info("No ingredients found for your selected meals.")r selected meals.")
+    st.info("No ingredients found for your selected meals.")
