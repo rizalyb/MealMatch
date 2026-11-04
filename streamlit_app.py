@@ -61,18 +61,19 @@ with st.sidebar.expander("💰 Budget", expanded=True):
         key="use_weekly_budget"
     )
 
-    if use_weekly_budget:
-        weekly_budget = st.slider(
-            "Weekly budget ($)",
-            10,
-            200,
-            30,
-            step=5,
-            key="weekly_budget"
-        )
-    else:
-        weekly_budget = 30
+if use_weekly_budget:
+    weekly_budget = st.slider(
+        "Weekly budget ($)",
+        10,
+        200,
+        30,
+        step=5,
+        key="weekly_budget"
+    )
+else:
+    weekly_budget = 30
 
+st.session_state["weekly_budget"] = weekly_budget
 
 # COOKING AND PLANNING
 
