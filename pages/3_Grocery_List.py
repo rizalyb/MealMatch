@@ -174,20 +174,20 @@ if grocery_display:
 
     # COLUMN HEADINGS
 
-    header1, header2, header3 = st.columns([3, 1.5, 1])
-
-    with header1:
-        st.caption("INGREDIENT")
+    header1, header2, header3, header4 = st.columns([0.4, 2.6, 1.5, 1])
 
     with header2:
-        st.caption("QUANTITY")
+        st.caption("INGREDIENT")
 
     with header3:
+        st.caption("QUANTITY")
+
+    with header4:
         st.caption("COST")
 
     st.divider()
 
-    # DISPLAY EACH INGREDIENT
+     # DISPLAY EACH INGREDIENT
 
     for index, item in enumerate(grocery_display):
 
@@ -197,32 +197,42 @@ if grocery_display:
 
         ingredient_id = f"{ingredient}_{quantity}"
 
-        col1, col2, col3 = st.columns(
-            [3, 1.5, 1],
+        checked = (
+            ingredient_id
+            in st.session_state["checked_ingredients"]
+        )
+
+        col1, col2, col3, col4 = st.columns(
+            [0.4, 2.6, 1.5, 1],
             vertical_alignment="center"
         )
 
         with col1:
-
-            checked = st.checkbox(
-                ingredient,
-                value=ingredient_id in st.session_state["checked_ingredients"],
+            new_checked = st.checkbox(
+                " ",
+                value=checked,
                 key=f"check_{index}_{ingredient_id}"
             )
 
-        if checked:
+        if new_checked:
             st.session_state["checked_ingredients"].add(ingredient_id)
         else:
             st.session_state["checked_ingredients"].discard(ingredient_id)
 
         with col2:
-            if checked:
+            if new_checked:
+                st.markdown(f"~~{ingredient}~~")
+            else:
+                st.write(ingredient)
+
+        with col3:
+            if new_checked:
                 st.markdown(f"~~{quantity}~~")
             else:
                 st.write(quantity)
 
-        with col3:
-            if checked:
+        with col4:
+            if new_checked:
                 st.markdown(f"~~${cost:.2f}~~")
             else:
                 st.write(f"${cost:.2f}")
