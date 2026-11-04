@@ -3,12 +3,15 @@ import pandas as pd
 from fractions import Fraction
 import re
 
+# PAGE TITLE
+
 st.title("🛒 Your Grocery List")
 
 st.write(
     "View the combined ingredients needed for all meals "
     "in your current meal plan."
 )
+
 
 # LOAD SHARED DATA
 
@@ -23,6 +26,7 @@ ingredients = st.session_state["ingredients"]
 # PARSE INGREDIENT QUANTITIES
 
 def parse_quantity(value):
+
     if pd.isna(value):
         return None
 
@@ -40,7 +44,7 @@ def parse_quantity(value):
         return None
 
 
-# COMBINE INGREDIENTS
+# COMBINE INGREDIENTS FROM ALL SELECTED MEALS
 
 combined_ingredients = {}
 
@@ -53,10 +57,10 @@ for _, meal in meal_plan.iterrows():
 
     serving_numbers = re.findall(r"\d+", str(meal["Servings"]))
 
-    original_servings = (
-        max(map(int, serving_numbers))
-        if serving_numbers else 1
-    )
+    if serving_numbers:
+        original_servings = max(map(int, serving_numbers))
+    else:
+        original_servings = 1
 
     desired_servings = st.session_state["desired_servings"]
 
@@ -83,7 +87,7 @@ for _, meal in meal_plan.iterrows():
                 "Estimated Cost": 0
             }
 
-        # CALCULATE INGREDIENT COST
+        # CALCULATE ESTIMATED INGREDIENT COST
 
         cost_value = pd.to_numeric(
             str(item["Estimated Cost"]).replace("$", "").replace(",", ""),
@@ -100,6 +104,7 @@ for _, meal in meal_plan.iterrows():
         quantity = parse_quantity(item["Quantity"])
 
         if quantity is not None:
+
             combined_ingredients[key]["Quantity"] += (
                 quantity * scaling_factor
             )
@@ -107,6 +112,7 @@ for _, meal in meal_plan.iterrows():
             combined_ingredients[key]["Has Number"] = True
 
         else:
+
             if pd.notna(item["Quantity"]):
                 combined_ingredients[key]["Other Notes"].add(
                     str(item["Quantity"]).strip()
@@ -120,6 +126,7 @@ grocery_display = []
 for item in combined_ingredients.values():
 
     if item["Has Number"]:
+
         quantity = item["Quantity"]
 
         if quantity.is_integer():
@@ -128,16 +135,17 @@ for item in combined_ingredients.values():
             quantity_text = (
                 f"{quantity:.2f}".rstrip("0").rstrip(".")
             )
+
     else:
         quantity_text = ""
 
     notes = ", ".join(sorted(item["Other Notes"]))
 
     if notes:
-        quantity_text = (
-            f"{quantity_text}, {notes}"
-            if quantity_text else notes
-        )
+        if quantity_text:
+            quantity_text = f"{quantity_text}, {notes}"
+        else:
+            quantity_text = notes
 
     grocery_display.append({
         "Ingredient": item["Ingredient"],
@@ -150,10 +158,16 @@ for item in combined_ingredients.values():
 
 st.divider()
 
-st.subheader("🛒 Shopping Checklist")
-st.write("Check off each ingredient as you shop or if you already have it.")
+st.subheader("Shopping Checklist")
+
+st.write(
+    "Check off each ingredient when you already have it "
+    "or when you finish shopping for it."
+)
 
 if grocery_display:
+
+    # KEEP TRACK OF CHECKED INGREDIENTS
 
     if "checked_ingredients" not in st.session_state:
         st.session_state["checked_ingredients"] = set()
@@ -173,7 +187,7 @@ if grocery_display:
 
     st.divider()
 
-    # INGREDIENT ROWS
+    # DISPLAY EACH INGREDIENT
 
     for index, item in enumerate(grocery_display):
 
@@ -183,57 +197,68 @@ if grocery_display:
 
         ingredient_id = f"{ingredient}_{quantity}"
 
-        checked = (
-            ingredient_id
-            in st.session_state["checked_ingredients"]
-        )
-
         col1, col2, col3 = st.columns(
             [3, 1.5, 1],
             vertical_alignment="center"
         )
 
         with col1:
-            new_checked = st.checkbox(
+
+            checked = st.checkbox(
                 ingredient,
-                value=checked,
+                value=ingredient_id in st.session_state["checked_ingredients"],
                 key=f"check_{index}_{ingredient_id}"
             )
 
-        if new_checked:
+        if checked:
             st.session_state["checked_ingredients"].add(ingredient_id)
         else:
             st.session_state["checked_ingredients"].discard(ingredient_id)
 
         with col2:
-            st.write(quantity)
+            if checked:
+                st.markdown(f"~~{quantity}~~")
+            else:
+                st.write(quantity)
 
         with col3:
-            st.write(f"${cost:.2f}")
+            if checked:
+                st.markdown(f"~~${cost:.2f}~~")
+            else:
+                st.write(f"${cost:.2f}")
 
         st.divider()
 
-    # TOTAL COST
+    # CALCULATE TOTAL COST
 
     total_cost = sum(
         item["Estimated Cost"] for item in grocery_display
     )
 
+    # COUNT CHECKED ITEMS
+
+    current_ingredient_ids = {
+        f"{item['Ingredient']}_{item['Quantity Needed']}"
+        for item in grocery_display
+    }
+
     checked_count = len(
         st.session_state["checked_ingredients"].intersection(
-            {
-                f"{item['Ingredient']}_{item['Quantity Needed']}"
-                for item in grocery_display
-            }
+            current_ingredient_ids
         )
     )
 
-    st.subheader("Estimated Grocery Cost")
+    # DISPLAY SUMMARY
+
+    st.subheader("Grocery List Summary")
 
     col1, col2 = st.columns(2)
 
     with col1:
-        st.metric("Total Ingredient Cost", f"${total_cost:.2f}")
+        st.metric(
+            "Estimated Ingredient Cost",
+            f"${total_cost:.2f}"
+        )
 
     with col2:
         st.metric(
@@ -242,26 +267,5 @@ if grocery_display:
         )
 
 else:
-    st.info("No ingredients found for your selected meals.")
 
-    # TOTAL GROCERY COST
-
-    total_cost = sum(
-        item["Estimated Cost"] for item in grocery_display
-    )
-
-    st.divider()
-    st.subheader("Estimated Grocery Cost")
-
-    st.metric(
-        "Total Ingredient Cost",
-        f"${total_cost:.2f}"
-    )
-
-    st.caption(
-        f"{len(grocery_display)} unique ingredients "
-        "in your grocery list."
-    )
-
-else:
     st.info("No ingredients found for your selected meals.")
