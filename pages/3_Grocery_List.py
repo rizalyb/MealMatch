@@ -206,24 +206,10 @@ if grocery_display:
             st.session_state["checked_ingredients"].discard(ingredient_id)
 
         with col2:
-            if new_checked:
-                st.markdown(
-                    f"<span style='color:gray; text-decoration:line-through;'>"
-                    f"{quantity}</span>",
-                    unsafe_allow_html=True
-                )
-            else:
-                st.write(quantity)
+            st.write(quantity)
 
         with col3:
-            if new_checked:
-                st.markdown(
-                    f"<span style='color:gray; text-decoration:line-through;'>"
-                    f"${cost:.2f}</span>",
-                    unsafe_allow_html=True
-                )
-            else:
-                st.write(f"${cost:.2f}")
+            st.write(f"${cost:.2f}")
 
         st.divider()
 
