@@ -19,6 +19,9 @@ planner_page = st.Page(
     icon="🍽️"
 )
 
+st.session_state["planner_page"] = planner_page
+st.session_state["grocery_page"] = grocery_page
+
 grocery_page = st.Page(
     "pages/3_Grocery_List.py",
     title="Grocery List",
