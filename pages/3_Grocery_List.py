@@ -72,14 +72,25 @@ for _, meal in meal_plan.iterrows():
         key = (ingredient_name.lower(), unit.lower())
 
         if key not in combined_ingredients:
-            combined_ingredients[key] = {
+             combined_ingredients[key] = {
                 "Ingredient": ingredient_name,
                 "Unit": unit,
                 "Quantity": 0,
                 "Has Number": False,
-                "Other Notes": set()
-            }
+                "Other Notes": set(),
+                "Estimated Cost": 0
+        }
 
+        cost_value = pd.to_numeric(
+            str(item["Estimated Cost"]).replace("$", "").replace(",", ""),
+            errors="coerce"
+        )
+
+        if pd.notna(cost_value):
+            combined_ingredients[key]["Estimated Cost"] += (
+                cost_value * scaling_factor
+            )
+        
         quantity = parse_quantity(item["Quantity"])
 
         if quantity is not None:
@@ -124,9 +135,9 @@ for item in combined_ingredients.values():
 
     grocery_display.append({
         "Ingredient": item["Ingredient"],
-        "Quantity Needed": f"{quantity_text} {item['Unit']}".strip()
+        "Quantity Needed": f"{quantity_text} {item['Unit']}".strip(),
+        "Estimated Cost": item["Estimated Cost"]
     })
-
 
 # DISPLAY GROCERY LIST
 
@@ -143,6 +154,9 @@ if grocery_display:
 
         ingredient = item["Ingredient"]
         quantity = item["Quantity Needed"]
+        cost = item["Estimated Cost"]
+
+        cost_text = f"${cost:.2f}"
 
         ingredient_id = f"{ingredient}_{quantity}"
 
@@ -168,14 +182,27 @@ if grocery_display:
 
         with col2:
             if new_checked:
-                st.markdown(f"~~{ingredient} | {quantity}~~")
+                st.markdown(f"~~{ingredient} | {quantity} | {cost_text}~~")
             else:
-                st.markdown(f"{ingredient} | {quantity}")
+                st.markdown(f"{ingredient} | {quantity} | {cost_text}")
 
-    st.caption(
-        f"{len(grocery_display)} unique ingredients "
-        "in your grocery list."
-    )
+total_cost = sum(
+    item["Estimated Cost"] for item in grocery_display
+)
+
+st.divider()
+
+st.subheader("Estimated Grocery Cost")
+
+st.metric(
+    "Total Ingredient Cost",
+    f"${total_cost:.2f}"
+)
+
+st.caption(
+    f"{len(grocery_display)} unique ingredients "
+    "in your grocery list."
+)
 
 else:
     st.info("No ingredients found for your selected meals.")
