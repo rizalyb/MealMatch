@@ -38,7 +38,6 @@ def parse_quantity(value):
     except (ValueError, ZeroDivisionError):
         return None
 
-
 # COMBINE INGREDIENTS
 
 combined_ingredients = {}
@@ -138,18 +137,22 @@ if grocery_display:
     st.subheader("Ingredients Needed")
     st.write("Check off ingredients you already have.")
 
-    for item in grocery_display:
+    for index, item in enumerate(grocery_display):
 
         ingredient = item["Ingredient"]
         quantity = item["Quantity Needed"]
 
         checked = st.checkbox(
-            f"{ingredient}  |  {quantity}",
-            key=f"grocery_{ingredient}_{quantity}"
+            f"{ingredient} | {quantity}",
+            key=f"grocery_item_{index}"
         )
 
         if checked:
-            st.caption(f"~~{ingredient}~~")
+            st.markdown(
+                f"<span style='text-decoration: line-through; color: gray;'>"
+                f"{ingredient} | {quantity}</span>",
+                unsafe_allow_html=True
+            )
 
     st.caption(
         f"{len(grocery_display)} unique ingredients "
@@ -157,4 +160,4 @@ if grocery_display:
     )
 
 else:
-    st.info("No ingredients found for your selected meals.")
+    st.info("No ingredients found for your selected meals.")r selected meals.")
