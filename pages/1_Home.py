@@ -1,3 +1,5 @@
+import streamlit as st
+
 st.title("🥗 Welcome to MealMatch")
 
 st.subheader(
