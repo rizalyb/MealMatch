@@ -134,14 +134,27 @@ for item in combined_ingredients.values():
 st.divider()
 
 if grocery_display:
-    grocery_table = pd.DataFrame(grocery_display)
 
     st.subheader("Ingredients Needed")
-    st.table(grocery_table)
+    st.write("Check off ingredients you already have.")
+
+    for item in grocery_display:
+
+        ingredient = item["Ingredient"]
+        quantity = item["Quantity Needed"]
+
+        checked = st.checkbox(
+            f"{ingredient}  |  {quantity}",
+            key=f"grocery_{ingredient}_{quantity}"
+        )
+
+        if checked:
+            st.caption(f"~~{ingredient}~~")
 
     st.caption(
-        f"{len(grocery_display)} unique ingredient entries "
-        "for your selected meal plan."
+        f"{len(grocery_display)} unique ingredients "
+        "in your grocery list."
     )
+
 else:
     st.info("No ingredients found for your selected meals.")
