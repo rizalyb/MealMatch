@@ -31,10 +31,24 @@ display_meals = meals.copy()
 
 if search_term.strip():
 
-    display_meals = display_meals[
-        display_meals["Meal Name"]
+    search = search_term.strip().lower()
+
+    matching_meals = meals[
+        meals["Meal Name"]
         .astype(str)
-        .str.contains(search_term.strip(), case=False, na=False)
+        .str.contains(search, case=False, na=False)
+    ]["Meal Name"].tolist()
+
+    matching_ingredients = ingredients[
+        ingredients["Ingredients"]
+        .astype(str)
+        .str.contains(search, case=False, na=False)
+    ]["Meal Name"].tolist()
+
+    matching_names = set(matching_meals + matching_ingredients)
+
+    display_meals = meals[
+        meals["Meal Name"].isin(matching_names)
     ]
 
 st.caption(
