@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from fractions import Fraction
+import re
 
 st.title("🛒 Your Grocery List")
 
@@ -49,7 +50,16 @@ for _, meal in meal_plan.iterrows():
         == str(meal["Meal Name"]).strip().lower()
     ]
 
-    scaling_factor = meal["Scaling Factor"]
+   serving_numbers = re.findall(r"\d+", str(meal["Servings"]))
+
+original_servings = (
+    max(map(int, serving_numbers))
+    if serving_numbers else 1
+)
+
+desired_servings = st.session_state["desired_servings"]
+
+scaling_factor = desired_servings / original_servings
 
     for _, item in meal_ingredients.iterrows():
 
@@ -85,7 +95,6 @@ for _, meal in meal_plan.iterrows():
                 combined_ingredients[key]["Other Notes"].add(
                     str(item["Quantity"]).strip()
                 )
-
 
 # FORMAT GROCERY LIST
 
