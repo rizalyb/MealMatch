@@ -111,7 +111,6 @@ with st.sidebar.expander("⏱️ Cooking & Planning", expanded=True):
         key="plan_days"
     )
 
-
 # FOOD PREFERENCES
 
 with st.sidebar.expander("🥦 Food Preferences", expanded=False):
