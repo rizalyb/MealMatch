@@ -10,6 +10,42 @@ st.set_page_config(
     layout="wide"
 )
 
+home_page = st.Page(
+    "pages/1_Home.py",
+    title="Home",
+    icon="🏠",
+    default=True
+)
+
+preferences_page = st.Page(
+    "pages/2_Meal_Preferences.py",
+    title="Meal Preferences",
+    icon="⚙️"
+)
+
+planner_page = st.Page(
+    "pages/3_Meal_Planner.py",
+    title="Meal Planner",
+    icon="🍽️"
+)
+
+grocery_page = st.Page(
+    "pages/4_Grocery_List.py",
+    title="Grocery List",
+    icon="🛒"
+)
+
+navigation = st.navigation({
+    "MealMatch": [
+        home_page,
+        preferences_page,
+        planner_page,
+        grocery_page
+    ]
+})
+
+navigation.run()
+
 # Find the folder containing this app
 APP_DIR = Path(__file__).parent
 
