@@ -6,50 +6,6 @@ st.title("🥗 Welcome to MealMatch")
 
 st.caption("Plan. Cook. Enjoy.")
 
-# CUSTOM DESIGN
-
-st.markdown(
-    """
-    <style>
-
-    .stApp {
-        background-color: #F8F7F0;
-    }
-
-    .block-container {
-        padding-top: 2rem;
-        padding-bottom: 3rem;
-        max-width: 1250px;
-    }
-
-    h1, h2, h3 {
-        color: #294B35 !important;
-    }
-
-    p {
-        color: #39483B;
-    }
-
-    [data-testid="stSidebar"] {
-        background-color: #E8EEDF;
-    }
-
-    [data-testid="stSidebar"] h1,
-    [data-testid="stSidebar"] h2,
-    [data-testid="stSidebar"] h3 {
-        color: #294B35;
-    }
-
-    [data-testid="stDivider"] {
-        border-color: #D5DEC9;
-    }
-
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
-
 # WELCOME BANNER
 
 with st.container(border=True):
