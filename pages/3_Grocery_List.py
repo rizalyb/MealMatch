@@ -148,7 +148,7 @@ if grocery_display:
 
         checked = ingredient_id in st.session_state["checked_ingredients"]
 
-        col1, col2 = st.columns([0.08, 0.92])
+        col1, col2 = st.columns([0.06, 0.94], vertical_alignment="center")
 
         with col1:
             new_checked = st.checkbox(
@@ -165,10 +165,10 @@ if grocery_display:
         with col2:
             if new_checked:
                 st.markdown(
-                    f"<span style='text-decoration: line-through; opacity: 0.5;'>"
-                    f"{ingredient} | {quantity}</span>",
-                    unsafe_allow_html=True
-                )
+                     f"<p style='text-decoration: line-through; opacity: 0.5; "
+                     f"margin: 0; padding: 0;'>{ingredient} | {quantity}</p>",
+                     unsafe_allow_html=True
+)
             else:
                 st.write(f"{ingredient} | {quantity}")
 
