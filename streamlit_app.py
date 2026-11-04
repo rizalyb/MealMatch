@@ -494,15 +494,6 @@ for day_index, (_, meal) in enumerate(meal_plan.iterrows(), start=1):
         else:
             st.info("No ingredient information found for this meal.")
 
-st.divider()
-
-st.subheader("Grocery Cost Summary")
-
-st.metric(
-    "Estimated cost of ingredients used",
-    f"${grocery_total:.2f}"
-)
-
 grocery_items = []
 
 for _, meal in meal_plan.iterrows():
