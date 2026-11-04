@@ -4,6 +4,12 @@ from pathlib import Path
 import re
 from fractions import Fraction
 
+st.set_page_config(
+    page_title="MealMatch",
+    page_icon="🥗",
+    layout="wide"
+)
+
 # Find the folder containing this app
 APP_DIR = Path(__file__).parent
 
@@ -272,9 +278,9 @@ if filtered_meals.empty:
         "No meals match your current preferences. "
         "Try adjusting your preferences in the sidebar."
     )
+    st.stop()
 
-else:
-    st.subheader("Your Weekly Meal Plan")
+st.subheader("Your Weekly Meal Plan")
 
 # Track preference changes so the meal plan refreshes when needed
 current_preferences = (
@@ -532,56 +538,3 @@ if grocery_display:
 
 else:
     st.info("No ingredients found for your selected meals.")
-
-grocery_items = []
-
-for _, meal in meal_plan.iterrows():
-
-    meal_ingredients = ingredients[
-        ingredients["Meal Name"] == meal["Meal Name"]
-    ]
-
-    scaling_factor = meal["Scaling Factor"]
-
-    st.write(f"**{meal['Meal Name']}**")
-
-    for _, item in meal_ingredients.iterrows():
-
-        original_quantity = str(item["Quantity"]).strip()
-        unit = item["Unit"]
-        
-        # Adjust ingredient quantities when numeric
-        try:
-            quantity_number = float(original_quantity)
-            adjusted_quantity = quantity_number * scaling_factor
-
-            if adjusted_quantity.is_integer():
-                quantity_display = str(int(adjusted_quantity))
-            else:
-                quantity_display = f"{adjusted_quantity:.2f}".rstrip("0").rstrip(".")
-
-        except (ValueError, TypeError):
-            quantity_display = original_quantity
-
-        unit_display = "" if pd.isna(unit) else str(unit)
-
-        st.write(
-            f"- {item['Ingredients']}: "
-            f"{quantity_display} {unit_display}"
-        )
-
-        # Calculate adjusted ingredient cost
-        cost = pd.to_numeric(
-            str(item["Estimated Cost"]).replace("$", ""),
-            errors="coerce"
-        )
-
-        if pd.notna(cost):
-            grocery_items.append(cost * scaling_factor)
-
-if grocery_items:
-    st.divider()
-    st.write(
-        f"**Estimated cost of ingredients used: "
-        f"${sum(grocery_items):.2f}**"
-    )
