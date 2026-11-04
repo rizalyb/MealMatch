@@ -148,7 +148,11 @@ if grocery_display:
 
         checked = ingredient_id in st.session_state["checked_ingredients"]
 
-        col1, col2 = st.columns([0.08, 0.92])
+        col1, col2 = st.columns(
+            [0.06, 0.94],
+            gap="small",
+            vertical_alignment="center"
+        )
 
         with col1:
             new_checked = st.checkbox(
