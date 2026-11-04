@@ -149,21 +149,37 @@ for item in combined_ingredients.values():
 # DISPLAY GROCERY LIST
 
 st.divider()
-st.subheader("Ingredients Needed")
-st.write("Check off ingredients you already have.")
+
+st.subheader("🛒 Shopping Checklist")
+st.write("Check off each ingredient as you shop or if you already have it.")
 
 if grocery_display:
 
     if "checked_ingredients" not in st.session_state:
         st.session_state["checked_ingredients"] = set()
 
+    # COLUMN HEADINGS
+
+    header1, header2, header3 = st.columns([3, 1.5, 1])
+
+    with header1:
+        st.caption("INGREDIENT")
+
+    with header2:
+        st.caption("QUANTITY")
+
+    with header3:
+        st.caption("COST")
+
+    st.divider()
+
+    # INGREDIENT ROWS
+
     for index, item in enumerate(grocery_display):
 
         ingredient = item["Ingredient"]
         quantity = item["Quantity Needed"]
         cost = item["Estimated Cost"]
-
-        cost_text = f"${cost:.2f}"
 
         ingredient_id = f"{ingredient}_{quantity}"
 
@@ -172,15 +188,14 @@ if grocery_display:
             in st.session_state["checked_ingredients"]
         )
 
-        col1, col2 = st.columns(
-            [0.06, 0.94],
-            gap="small",
+        col1, col2, col3 = st.columns(
+            [3, 1.5, 1],
             vertical_alignment="center"
         )
 
         with col1:
             new_checked = st.checkbox(
-                " ",
+                ingredient,
                 value=checked,
                 key=f"check_{index}_{ingredient_id}"
             )
@@ -193,12 +208,55 @@ if grocery_display:
         with col2:
             if new_checked:
                 st.markdown(
-                    f"~~{ingredient} | {quantity} | {cost_text}~~"
+                    f"<span style='color:gray; text-decoration:line-through;'>"
+                    f"{quantity}</span>",
+                    unsafe_allow_html=True
                 )
             else:
+                st.write(quantity)
+
+        with col3:
+            if new_checked:
                 st.markdown(
-                    f"{ingredient} | {quantity} | {cost_text}"
+                    f"<span style='color:gray; text-decoration:line-through;'>"
+                    f"${cost:.2f}</span>",
+                    unsafe_allow_html=True
                 )
+            else:
+                st.write(f"${cost:.2f}")
+
+        st.divider()
+
+    # TOTAL COST
+
+    total_cost = sum(
+        item["Estimated Cost"] for item in grocery_display
+    )
+
+    checked_count = len(
+        st.session_state["checked_ingredients"].intersection(
+            {
+                f"{item['Ingredient']}_{item['Quantity Needed']}"
+                for item in grocery_display
+            }
+        )
+    )
+
+    st.subheader("Estimated Grocery Cost")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.metric("Total Ingredient Cost", f"${total_cost:.2f}")
+
+    with col2:
+        st.metric(
+            "Items Checked",
+            f"{checked_count}/{len(grocery_display)}"
+        )
+
+else:
+    st.info("No ingredients found for your selected meals.")
 
     # TOTAL GROCERY COST
 
