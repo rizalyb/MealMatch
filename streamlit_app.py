@@ -70,8 +70,9 @@ if use_weekly_budget:
         step=5,
         key="weekly_budget"
     )
-else:
-    weekly_budget = 30
+    else:
+        weekly_budget = 30
+        st.session_state["weekly_budget"] = weekly_budget
 
 st.session_state["weekly_budget"] = weekly_budget
 
@@ -96,6 +97,7 @@ with st.sidebar.expander("⏱️ Cooking & Planning", expanded=True):
         )
     else:
         max_time = None
+        st.session_state["max_time"] = None
 
     desired_servings = st.selectbox(
         "Number of servings",
