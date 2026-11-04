@@ -523,11 +523,7 @@ if grocery_display:
 
     grocery_table = pd.DataFrame(grocery_display)
 
-    st.dataframe(
-        grocery_table,
-        hide_index=True,
-        use_container_width=True
-    )
+    st.table(grocery_table)
 
     st.caption(
         f"{len(grocery_display)} unique ingredient entries "
