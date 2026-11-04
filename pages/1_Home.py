@@ -19,7 +19,7 @@ st.write(
 st.divider()
 
 st.info(
-    "Before exploring meals, adjust your budget, cooking time, "
+    "Before planning meals, adjust your budget, cooking time, "
     "and food preferences in the sidebar."
 )
 
@@ -28,6 +28,7 @@ st.header("Explore MealMatch")
 col1, col2 = st.columns(2)
 
 with col1:
+
     st.subheader("🍽️ Meal Planner")
 
     st.write(
@@ -43,6 +44,7 @@ with col1:
     )
 
 with col2:
+
     st.subheader("🛒 Grocery List")
 
     st.write(
@@ -62,12 +64,13 @@ st.divider()
 st.header("Explore All Meal Options")
 
 st.write(
-    "Want to browse recipes without filtering by your current "
-    "preferences? Explore the full MealMatch recipe collection."
+    "Browse the full MealMatch recipe collection. "
+    "Select any meal to view its ingredients, nutrition, "
+    "and cooking instructions."
 )
 
 st.page_link(
-    st.session_state["planner_page"],
+    st.session_state["explore_page"],
     label="Explore All Meals",
     icon="📖",
     use_container_width=True
