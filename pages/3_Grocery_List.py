@@ -50,16 +50,16 @@ for _, meal in meal_plan.iterrows():
         == str(meal["Meal Name"]).strip().lower()
     ]
 
-   serving_numbers = re.findall(r"\d+", str(meal["Servings"]))
+    serving_numbers = re.findall(r"\d+", str(meal["Servings"]))
 
-original_servings = (
-    max(map(int, serving_numbers))
-    if serving_numbers else 1
-)
+    original_servings = (
+        max(map(int, serving_numbers))
+        if serving_numbers else 1
+    )
 
-desired_servings = st.session_state["desired_servings"]
+    desired_servings = st.session_state["desired_servings"]
 
-scaling_factor = desired_servings / original_servings
+    scaling_factor = desired_servings / original_servings
 
     for _, item in meal_ingredients.iterrows():
 
@@ -96,6 +96,7 @@ scaling_factor = desired_servings / original_servings
                     str(item["Quantity"]).strip()
                 )
 
+
 # FORMAT GROCERY LIST
 
 grocery_display = []
@@ -103,7 +104,6 @@ grocery_display = []
 for item in combined_ingredients.values():
 
     if item["Has Number"]:
-
         quantity = item["Quantity"]
 
         if quantity.is_integer():
@@ -112,7 +112,6 @@ for item in combined_ingredients.values():
             quantity_text = (
                 f"{quantity:.2f}".rstrip("0").rstrip(".")
             )
-
     else:
         quantity_text = ""
 
@@ -135,7 +134,6 @@ for item in combined_ingredients.values():
 st.divider()
 
 if grocery_display:
-
     grocery_table = pd.DataFrame(grocery_display)
 
     st.subheader("Ingredients Needed")
@@ -145,6 +143,5 @@ if grocery_display:
         f"{len(grocery_display)} unique ingredient entries "
         "for your selected meal plan."
     )
-
 else:
     st.info("No ingredients found for your selected meals.")
