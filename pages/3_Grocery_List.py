@@ -154,7 +154,7 @@ if grocery_display:
                 border-bottom: 1px solid rgba(128, 128, 128, 0.3);
                 font-family: sans-serif;
                 font-size: 15px;
-                color: var(--grocery-text);
+                color: var(--grocery-text, #000000);
             }}
 
             .grocery-item input {{
@@ -174,17 +174,36 @@ if grocery_display:
             const items = {grocery_items};
             const container = document.getElementById("grocery-list");
 
-            const appContainer = window.parent.document.querySelector(
-                '[data-testid="stAppViewContainer"]'
-            );
+            function updateThemeColor() {{
 
-            const themeText = window.parent.getComputedStyle(
-                appContainer
-            ).color;
+                const appContainer = window.parent.document.querySelector(
+                    '[data-testid="stAppViewContainer"]'
+                );
 
-            container.style.setProperty(
-                "--grocery-text",
-                themeText
+                if (appContainer) {{
+
+                    const themeText = window.parent.getComputedStyle(
+                        appContainer
+                    ).color;
+
+                    container.style.setProperty(
+                        "--grocery-text",
+                        themeText
+                    );
+                }}
+            }}
+
+            updateThemeColor();
+
+            const themeObserver = new MutationObserver(updateThemeColor);
+
+            themeObserver.observe(
+                window.parent.document.documentElement,
+                {{
+                    attributes: true,
+                    attributeFilter: ["data-theme", "class", "style"],
+                    subtree: true
+                }}
             );
 
             items.forEach((item, index) => {{
@@ -202,10 +221,7 @@ if grocery_display:
                     item["Quantity Needed"];
 
                 checkbox.addEventListener("change", function() {{
-                    row.classList.toggle(
-                        "checked",
-                        checkbox.checked
-                    );
+                    row.classList.toggle("checked", checkbox.checked);
                 }});
 
                 row.appendChild(checkbox);
