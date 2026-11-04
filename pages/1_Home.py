@@ -3,12 +3,12 @@ import streamlit as st
 st.title("🥗 Welcome to MealMatch")
 
 st.subheader(
-    "Meals that match your budget, schedule, and taste."
+    "Plan meals around your budget, schedule, and taste."
 )
 
 st.write(
     """
-    MealMatch helps you find affordable meals based on your
+    MealMatch helps you find affordable recipes based on your
     budget, cooking time, food preferences, and nutrition goals.
 
     Plan your meals, explore recipes, and organize your
@@ -18,33 +18,27 @@ st.write(
 
 st.divider()
 
-st.header("What would you like to do?")
+st.header("Explore MealMatch")
 
 col1, col2 = st.columns(2)
 
 with col1:
-    st.subheader("⚙️ Meal Preferences")
+    st.subheader("🍽️ Meal Planner")
     st.write(
-        "Set your budget, cooking time, servings, "
-        "dietary restrictions, and nutrition goals."
+        "Find recipes that match your preferences, "
+        "explore alternatives, and organize your weekly meals."
     )
 
 with col2:
-    st.subheader("🍽️ Meal Planner")
+    st.subheader("🛒 Grocery List")
     st.write(
-        "Explore matching recipes, choose alternatives, "
-        "and organize your weekly meal plan."
+        "View your combined ingredients and the quantities "
+        "needed for your selected meals."
     )
 
 st.divider()
 
-st.subheader("🛒 Grocery List")
-
-st.write(
-    "View your combined ingredient list and the quantities "
-    "needed for your selected meals."
-)
-
 st.info(
-    "Start by setting your preferences in the Meal Preferences page."
+    "Start by adjusting your meal preferences in the sidebar. "
+    "Then visit Meal Planner to find meals that match your needs."
 )
