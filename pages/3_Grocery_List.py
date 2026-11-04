@@ -148,7 +148,10 @@ if grocery_display:
 
         checked = ingredient_id in st.session_state["checked_ingredients"]
 
-        col1, col2 = st.columns([0.06, 0.94], vertical_alignment="center")
+        col1, col2 = st.columns(
+            [0.06, 0.94],
+            vertical_alignment="center"
+        )
 
         with col1:
             new_checked = st.checkbox(
@@ -162,28 +165,28 @@ if grocery_display:
         else:
             st.session_state["checked_ingredients"].discard(ingredient_id)
 
-       with col2:
+        with col2:
 
-    if new_checked:
-        text_style = (
-            "text-decoration: line-through; opacity: 0.5;"
-        )
-    else:
-        text_style = ""
+            if new_checked:
+                text_style = (
+                    "text-decoration: line-through; opacity: 0.5;"
+                )
+            else:
+                text_style = ""
 
-    st.markdown(
-        f"""
-        <div style="
-            {text_style}
-            line-height: 38px;
-            margin: 0;
-            padding: 0;
-        ">
-            {ingredient} | {quantity}
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+            st.markdown(
+                f"""
+                <div style="
+                    {text_style}
+                    line-height: 38px;
+                    margin: 0;
+                    padding: 0;
+                ">
+                    {ingredient} | {quantity}
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
 
     st.caption(
         f"{len(grocery_display)} unique ingredients "
