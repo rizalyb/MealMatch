@@ -17,6 +17,7 @@ APP_DIR = Path(__file__).parent
 
 @st.cache_data
 def load_meal_data():
+
     meals = pd.read_csv(
         APP_DIR / "Rizaly Barlam - MealMatch CSV(Meals).csv",
         encoding="cp1252"
@@ -62,6 +63,7 @@ with st.sidebar.expander("💰 Budget", expanded=True):
     )
 
 if use_weekly_budget:
+
     weekly_budget = st.slider(
         "Weekly budget ($)",
         10,
@@ -70,11 +72,13 @@ if use_weekly_budget:
         step=5,
         key="weekly_budget"
     )
+
 else:
     weekly_budget = 30
     st.session_state["weekly_budget"] = weekly_budget
 
 st.session_state["weekly_budget"] = weekly_budget
+
 
 # COOKING AND PLANNING
 
@@ -87,6 +91,7 @@ with st.sidebar.expander("⏱️ Cooking & Planning", expanded=True):
     )
 
     if use_time_limit:
+
         max_time = st.slider(
             "Maximum cooking time (minutes)",
             5,
@@ -95,6 +100,7 @@ with st.sidebar.expander("⏱️ Cooking & Planning", expanded=True):
             step=5,
             key="max_time"
         )
+
     else:
         max_time = None
         st.session_state["max_time"] = None
@@ -110,6 +116,7 @@ with st.sidebar.expander("⏱️ Cooking & Planning", expanded=True):
         [1, 3, 5, 7],
         key="plan_days"
     )
+
 
 # FOOD PREFERENCES
 
@@ -145,6 +152,7 @@ with st.sidebar.expander("❤️ Nutrition Goals", expanded=False):
     )
 
     if use_calorie_limit:
+
         max_calories = st.number_input(
             "Maximum calories per serving",
             50,
@@ -153,6 +161,7 @@ with st.sidebar.expander("❤️ Nutrition Goals", expanded=False):
             step=50,
             key="max_calories"
         )
+
     else:
         max_calories = None
         st.session_state["max_calories"] = None
@@ -164,6 +173,7 @@ with st.sidebar.expander("❤️ Nutrition Goals", expanded=False):
     )
 
     if use_protein_goal:
+
         min_protein = st.number_input(
             "Minimum protein (g)",
             1,
@@ -172,10 +182,12 @@ with st.sidebar.expander("❤️ Nutrition Goals", expanded=False):
             step=5,
             key="min_protein"
         )
+
     else:
         min_protein = None
         st.session_state["min_protein"] = None
-        
+
+
 # PAGE NAVIGATION
 
 home_page = st.Page(
@@ -197,13 +209,21 @@ grocery_page = st.Page(
     icon="🛒"
 )
 
+explore_page = st.Page(
+    "pages/4_Explore_Meals.py",
+    title="Explore Meals",
+    icon="📖"
+)
+
 st.session_state["planner_page"] = planner_page
 st.session_state["grocery_page"] = grocery_page
+st.session_state["explore_page"] = explore_page
 
 navigation = st.navigation([
     home_page,
     planner_page,
-    grocery_page
+    grocery_page,
+    explore_page
 ])
 
 navigation.run()
