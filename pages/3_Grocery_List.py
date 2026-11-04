@@ -151,21 +151,22 @@ if grocery_display:
                 align-items: center;
                 gap: 10px;
                 padding: 9px 4px;
-                border-bottom: 1px solid #dddddd;
+                border-bottom: 1px solid rgba(128, 128, 128, 0.3);
                 font-family: sans-serif;
                 font-size: 15px;
-                color: var(--text-color);
+                color: var(--grocery-text);
             }}
 
             .grocery-item input {{
                 width: 17px;
                 height: 17px;
                 cursor: pointer;
+                flex-shrink: 0;
             }}
 
             .grocery-item.checked span {{
                 text-decoration: line-through;
-                color: gray;
+                opacity: 0.55;
             }}
         </style>
 
@@ -173,7 +174,21 @@ if grocery_display:
             const items = {grocery_items};
             const container = document.getElementById("grocery-list");
 
+            const appContainer = window.parent.document.querySelector(
+                '[data-testid="stAppViewContainer"]'
+            );
+
+            const themeText = window.parent.getComputedStyle(
+                appContainer
+            ).color;
+
+            container.style.setProperty(
+                "--grocery-text",
+                themeText
+            );
+
             items.forEach((item, index) => {{
+
                 const row = document.createElement("label");
                 row.className = "grocery-item";
 
@@ -181,15 +196,21 @@ if grocery_display:
                 checkbox.type = "checkbox";
 
                 const text = document.createElement("span");
+
                 text.textContent =
-                    item["Ingredient"] + " | " + item["Quantity Needed"];
+                    item["Ingredient"] + " | " +
+                    item["Quantity Needed"];
 
                 checkbox.addEventListener("change", function() {{
-                    row.classList.toggle("checked", checkbox.checked);
+                    row.classList.toggle(
+                        "checked",
+                        checkbox.checked
+                    );
                 }});
 
                 row.appendChild(checkbox);
                 row.appendChild(text);
+
                 container.appendChild(row);
             }});
         </script>
