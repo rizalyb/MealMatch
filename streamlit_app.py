@@ -13,12 +13,6 @@ home_page = st.Page(
     default=True
 )
 
-preferences_page = st.Page(
-    "pages/2_Meal_Preferences.py",
-    title="Meal Preferences",
-    icon="⚙️"
-)
-
 planner_page = st.Page(
     "pages/3_Meal_Planner.py",
     title="Meal Planner",
@@ -33,7 +27,6 @@ grocery_page = st.Page(
 
 navigation = st.navigation([
     home_page,
-    preferences_page,
     planner_page,
     grocery_page
 ])
