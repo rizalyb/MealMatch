@@ -130,110 +130,47 @@ for item in combined_ingredients.values():
 
 # DISPLAY GROCERY LIST
 
-import streamlit.components.v1 as components
-import json
-
 st.divider()
 st.subheader("Ingredients Needed")
 st.write("Check off ingredients you already have.")
 
 if grocery_display:
 
-    grocery_items = json.dumps(grocery_display)
+    if "checked_ingredients" not in st.session_state:
+        st.session_state["checked_ingredients"] = set()
 
-    components.html(
-        f"""
-        <div id="grocery-list"></div>
+    for index, item in enumerate(grocery_display):
 
-        <style>
-            .grocery-item {{
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                padding: 9px 4px;
-                border-bottom: 1px solid rgba(128, 128, 128, 0.3);
-                font-family: sans-serif;
-                font-size: 15px;
-                color: var(--grocery-text, #000000);
-            }}
+        ingredient = item["Ingredient"]
+        quantity = item["Quantity Needed"]
 
-            .grocery-item input {{
-                width: 17px;
-                height: 17px;
-                cursor: pointer;
-                flex-shrink: 0;
-            }}
+        ingredient_id = f"{ingredient}_{quantity}"
 
-            .grocery-item.checked span {{
-                text-decoration: line-through;
-                opacity: 0.55;
-            }}
-        </style>
+        checked = ingredient_id in st.session_state["checked_ingredients"]
 
-        <script>
-            const items = {grocery_items};
-            const container = document.getElementById("grocery-list");
+        col1, col2 = st.columns([0.08, 0.92])
 
-            function updateThemeColor() {{
+        with col1:
+            new_checked = st.checkbox(
+                " ",
+                value=checked,
+                key=f"check_{index}_{ingredient_id}"
+            )
 
-                const appContainer = window.parent.document.querySelector(
-                    '[data-testid="stAppViewContainer"]'
-                );
+        if new_checked:
+            st.session_state["checked_ingredients"].add(ingredient_id)
+        else:
+            st.session_state["checked_ingredients"].discard(ingredient_id)
 
-                if (appContainer) {{
-
-                    const themeText = window.parent.getComputedStyle(
-                        appContainer
-                    ).color;
-
-                    container.style.setProperty(
-                        "--grocery-text",
-                        themeText
-                    );
-                }}
-            }}
-
-            updateThemeColor();
-
-            const themeObserver = new MutationObserver(updateThemeColor);
-
-            themeObserver.observe(
-                window.parent.document.documentElement,
-                {{
-                    attributes: true,
-                    attributeFilter: ["data-theme", "class", "style"],
-                    subtree: true
-                }}
-            );
-
-            items.forEach((item, index) => {{
-
-                const row = document.createElement("label");
-                row.className = "grocery-item";
-
-                const checkbox = document.createElement("input");
-                checkbox.type = "checkbox";
-
-                const text = document.createElement("span");
-
-                text.textContent =
-                    item["Ingredient"] + " | " +
-                    item["Quantity Needed"];
-
-                checkbox.addEventListener("change", function() {{
-                    row.classList.toggle("checked", checkbox.checked);
-                }});
-
-                row.appendChild(checkbox);
-                row.appendChild(text);
-
-                container.appendChild(row);
-            }});
-        </script>
-        """,
-        height=max(150, len(grocery_display) * 42 + 20),
-        scrolling=False
-    )
+        with col2:
+            if new_checked:
+                st.markdown(
+                    f"<span style='text-decoration: line-through; opacity: 0.5;'>"
+                    f"{ingredient} | {quantity}</span>",
+                    unsafe_allow_html=True
+                )
+            else:
+                st.write(f"{ingredient} | {quantity}")
 
     st.caption(
         f"{len(grocery_display)} unique ingredients "
