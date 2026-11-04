@@ -20,33 +20,36 @@ ingredients = st.session_state["ingredients"]
 APP_DIR = Path(__file__).resolve().parent.parent
 IMAGE_DIR = APP_DIR / "images"
 
+HOMEMADE_DIR = IMAGE_DIR / "homemade"
+RESTAURANT_DIR = IMAGE_DIR / "restaurant"
+
 
 # RECIPE IMAGE FILENAMES
 
-recipe_images = {
-    "Egg Burrito": "egg_burrito.jpg",
-    "Chicken Stir-Fry": "chicken_stir_fry.jpg",
-    "Pizza Melts": "pizza_melts.jpg",
-    "Spinach and Feta Grilled Cheese": "spinach_feta_grilled_cheese.jpg",
-    "Chicken-Vegetable Soup": "chicken_vegetable_soup.jpg",
-    "Vegetable Curry": "vegetable_curry.jpg",
-    "Pasta with Bacon and Peas": "pasta_bacon_peas.jpg",
-    "Simple Macaroni and Cheese": "macaroni_cheese.jpg",
-    "Sloppy Joe": "sloppy_joe.jpg",
-    "Chicken Wings": "chicken_wings.jpg",
-    "Taco Nachos": "taco_nachos.jpg",
-    "Egg Salad Sandwich": "egg_salad_sandwich.jpg",
-    "Protein Waffles": "protein_waffles.jpg",
-    "Homemade Chicken Nuggets": "chicken_nuggets.jpg",
-    "Honey Garlic Shrimp": "honey_garlic_shrimp.jpg",
-    "Shrimp Fried Rice": "shrimp_fried_rice.jpg",
-    "Yogurt Berry Bowl": "yogurt_berry_bowl.jpg",
-    "Classic Yogurt Bowl": "classic_yogurt_bowl.jpg",
-    "Tropical Yogurt Bowl": "tropical_yogurt_bowl.jpg",
-    "Meat-Loaf": "meat_loaf.jpg",
-    "BBLT Chopped Salad": "bblt_chopped_salad.jpg",
-    "Lemon Basil Salmon": "lemon_basil_salmon.jpg",
-    "Chicken Caesar Salad": "chicken_caesar_salad.jpg"
+recipe_image_names = {
+    "Egg Burrito": "egg_burrito",
+    "Chicken Stir-Fry": "chicken_stir_fry",
+    "Pizza Melts": "pizza_melts",
+    "Spinach and Feta Grilled Cheese": "spinach_feta_grilled_cheese",
+    "Chicken-Vegetable Soup": "chicken_vegetable_soup",
+    "Vegetable Curry": "vegetable_curry",
+    "Pasta with Bacon and Peas": "pasta_bacon_peas",
+    "Simple Macaroni and Cheese": "macaroni_cheese",
+    "Sloppy Joe": "sloppy_joe",
+    "Chicken Wings": "chicken_wings",
+    "Taco Nachos": "taco_nachos",
+    "Egg Salad Sandwich": "egg_salad_sandwich",
+    "Protein Waffles": "protein_waffles",
+    "Homemade Chicken Nuggets": "chicken_nuggets",
+    "Honey Garlic Shrimp": "honey_garlic_shrimp",
+    "Shrimp Fried Rice": "shrimp_fried_rice",
+    "Yogurt Berry Bowl": "yogurt_berry_bowl",
+    "Classic Yogurt Bowl": "classic_yogurt_bowl",
+    "Tropical Yogurt Bowl": "tropical_yogurt_bowl",
+    "Meat-Loaf": "meat_loaf",
+    "BBLT Chopped Salad": "bblt_chopped_salad",
+    "Lemon Basil Salmon": "lemon_basil_salmon",
+    "Chicken Caesar Salad": "chicken_caesar_salad"
 }
 
 
@@ -86,6 +89,20 @@ def show_number(value, unit=""):
 
     except (ValueError, TypeError):
         return str(value).strip()
+
+
+def show_recipe_image(image_path):
+
+    if image_path.exists():
+
+        st.image(
+            str(image_path),
+            use_container_width=True
+        )
+
+    else:
+
+        st.info("📷 Recipe photo coming soon.")
 
 
 # SEARCH MEALS
@@ -138,8 +155,6 @@ if display_meals.empty:
 
 else:
 
-    # CREATE THREE-COLUMN GRID
-
     for start in range(0, len(display_meals), 3):
 
         meal_group = display_meals.iloc[start:start + 3]
@@ -157,12 +172,7 @@ else:
                 meal["Ingredient Cost"]
             )
 
-            image_filename = recipe_images.get(meal_name)
-
-            if image_filename:
-                image_path = IMAGE_DIR / image_filename
-            else:
-                image_path = None
+            image_name = recipe_image_names.get(meal_name)
 
             # FIND INGREDIENTS
 
@@ -178,20 +188,35 @@ else:
 
                 with st.container(border=True):
 
-                    # RECIPE IMAGE
+                    # RECIPE PHOTOS
 
-                    if image_path and image_path.exists():
+                    st.subheader("📷 Recipe Photos")
 
-                        st.image(
-                            str(image_path),
-                            use_container_width=True
+                    if image_name:
+
+                        homemade_path = (
+                            HOMEMADE_DIR / f"{image_name}_hm.jpeg"
                         )
+
+                        restaurant_path = (
+                            RESTAURANT_DIR / f"{image_name}_r.jpeg"
+                        )
+
+                        homemade_tab, restaurant_tab = st.tabs(
+                            ["🏡 Homemade", "🍽️ Restaurant"]
+                        )
+
+                        with homemade_tab:
+
+                            show_recipe_image(homemade_path)
+
+                        with restaurant_tab:
+
+                            show_recipe_image(restaurant_path)
 
                     else:
 
-                        st.info(
-                            "📷 Recipe photo coming soon."
-                        )
+                        st.info("📷 Recipe photos coming soon.")
 
                     # RECIPE NAME AND SUMMARY
 
