@@ -36,7 +36,7 @@ with col1:
     )
 
     st.page_link(
-        "pages/4_Meal_Planner.py",
+        st.session_state["planner_page"],
         label="Open Meal Planner",
         icon="🍽️",
         use_container_width=True
@@ -51,7 +51,7 @@ with col2:
     )
 
     st.page_link(
-        "pages/4_Grocery_List.py",
+        st.session_state["grocery_page"],
         label="Open Grocery List",
         icon="🛒",
         use_container_width=True
@@ -67,7 +67,7 @@ st.write(
 )
 
 st.page_link(
-    "pages/4_Meal_Planner.py",
+    st.session_state["planner_page"],
     label="Explore All Meals",
     icon="📖",
     use_container_width=True
