@@ -154,6 +154,7 @@ with st.sidebar.expander("❤️ Nutrition Goals", expanded=False):
         )
     else:
         max_calories = None
+        st.session_state["max_calories"] = None
 
     use_protein_goal = st.checkbox(
         "Set minimum protein goal",
@@ -172,8 +173,8 @@ with st.sidebar.expander("❤️ Nutrition Goals", expanded=False):
         )
     else:
         min_protein = None
-
-
+        st.session_state["min_protein"] = None
+        
 # PAGE NAVIGATION
 
 home_page = st.Page(
