@@ -251,13 +251,13 @@ def show_recipe_images(meal_name):
 
     with st.container(key=viewer_key):
 
-        _, image_col, _ = st.columns([1, 2, 1])
+    _, image_col, _ = st.columns([1, 2, 1])
 
-with image_col:
-    st.image(
-        image_paths[current_index],
-        use_container_width=True
-    )
+    with image_col:
+        st.image(
+            image_paths[current_index],
+            use_container_width=True
+        )
 
         if len(image_paths) > 1:
 
