@@ -58,23 +58,23 @@ st.markdown(
         opacity: 1;
     }
 
-    /* Left arrow */
+    /* Left arrow, closer to the left edge */
     div[class*="st-key-photo_prev_"] {
-        left: 42%;
+        left: 5%;
         top: 50%;
         transform: translateY(-50%);
     }
 
-    /* Right arrow */
+    /* Right arrow, closer to the right edge */
     div[class*="st-key-photo_next_"] {
-        right: 42%;
+        right: 5%;
         top: 50%;
         transform: translateY(-50%);
     }
 
-    /* Expand icon */
+    /* Expand icon, bottom-right corner */
     div[class*="st-key-photo_expand_"] {
-        right: 42%;
+        right: 5%;
         bottom: 8px;
     }
     
