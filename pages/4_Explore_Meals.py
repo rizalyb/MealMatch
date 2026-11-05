@@ -197,7 +197,7 @@ def show_large_photo():
                     selected_photo - 1
                 ) % len(image_paths)
 
-                st.rerun()
+                st.rerun(scope="fragment")
 
         with next_col:
             if st.button(
@@ -209,7 +209,7 @@ def show_large_photo():
                     selected_photo + 1
                 ) % len(image_paths)
 
-                st.rerun()
+                st.rerun(scope="fragment")
         
 # --------------------------------------------------
 # RECIPE PHOTO DISPLAY
