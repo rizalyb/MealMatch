@@ -32,10 +32,15 @@ if COMPONENT_DIR.exists():
         file.name for file in COMPONENT_DIR.iterdir()
     ])
 
-meal_photo_viewer = components.declare_component(
-    "meal_photo_viewer",
-    path=str(COMPONENT_DIR)
-)
+@st.cache_resource
+def load_meal_photo_viewer():
+    return components.declare_component(
+        "meal_photo_viewer",
+        path=str(COMPONENT_DIR)
+    )
+
+
+meal_photo_viewer = load_meal_photo_viewer()
 
 st.title("Explore Meals")
 st.write("Browse recipes, compare costs, and find meals that fit your preferences.")
