@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 from pathlib import Path
@@ -24,6 +23,16 @@ st.title("Explore Meals")
 st.write("Browse recipes, compare costs, and find meals that fit your preferences.")
 
 st.divider()
+
+
+# --------------------------------------------------
+# CUSTOM PHOTO VIEWER COMPONENT
+# --------------------------------------------------
+
+meal_photo_viewer = components.declare_component(
+    "meal_photo_viewer",
+    path=str(APP_DIR / "components" / "meal_photo_viewer")
+)
 
 
 # --------------------------------------------------
@@ -93,10 +102,10 @@ def encode_image(image_path):
 
 
 # --------------------------------------------------
-# HTML PHOTO CAROUSEL
+# HTML PHOTO CAROUSEL FOR THE ENLARGED DIALOG
 # --------------------------------------------------
 
-def build_photo_viewer(image_paths, viewer_height=200):
+def build_photo_viewer(image_paths, viewer_height=580):
 
     encoded_images = [
         encode_image(path) for path in image_paths
@@ -140,13 +149,13 @@ def build_photo_viewer(image_paths, viewer_height=200):
                 position: absolute;
                 top: 50%;
                 transform: translateY(-50%);
-                width: 38px;
-                height: 38px;
+                width: 42px;
+                height: 42px;
                 border: none;
                 border-radius: 50%;
                 background: rgba(0, 0, 0, 0.58);
                 color: white;
-                font-size: 27px;
+                font-size: 29px;
                 line-height: 1;
                 cursor: pointer;
                 opacity: 0;
@@ -166,11 +175,11 @@ def build_photo_viewer(image_paths, viewer_height=200):
             }
 
             .photo-arrow.left {
-                left: 10px;
+                left: 12px;
             }
 
             .photo-arrow.right {
-                right: 10px;
+                right: 12px;
             }
 
             .photo-arrow.hidden {
@@ -213,7 +222,6 @@ def build_photo_viewer(image_paths, viewer_height=200):
             const nextButton = document.getElementById("next-photo");
 
             function displayPhoto() {
-
                 photo.src = images[currentIndex];
 
                 if (images.length <= 1) {
@@ -223,7 +231,6 @@ def build_photo_viewer(image_paths, viewer_height=200):
             }
 
             function changePhoto(direction) {
-
                 currentIndex =
                     (currentIndex + direction + images.length)
                     % images.length;
@@ -283,8 +290,6 @@ def show_recipe_images(
     meal_name
 ):
 
-    # Collect available photos.
-
     image_paths = []
 
     if homemade_path.exists():
@@ -296,42 +301,47 @@ def show_recipe_images(
     if ingredients_path.exists():
         image_paths.append(ingredients_path)
 
-    # Show a message if no photos exist.
-
     if not image_paths:
         st.info("📷 Recipe photos coming soon.")
-        return
+        return False
 
-    # Display the HTML photo carousel.
+    encoded_images = [
+        encode_image(path) for path in image_paths
+    ]
 
-    html_code = build_photo_viewer(
-        image_paths,
-        viewer_height=190
+    component_key = f"meal_photo_{get_image_name(meal_name)}"
+
+    photo_event = meal_photo_viewer(
+        images=encoded_images,
+        viewer_height=220,
+        show_expand=True,
+        key=component_key
     )
 
-    components.html(
-        html_code,
-        height=195,
-        scrolling=False
-    )
+    # Open the dialog only for a new expand click.
+    # The event ID prevents the same click from reopening the dialog
+    # during later Streamlit reruns.
 
-    # Small expand icon.
+    if (
+        isinstance(photo_event, dict)
+        and photo_event.get("action") == "expand"
+    ):
 
-    expand_col1, expand_col2 = st.columns([10, 1])
+        event_id = str(photo_event.get("click_id", ""))
+        last_event_key = f"last_expand_event_{get_image_name(meal_name)}"
+        last_event_id = st.session_state.get(last_event_key)
 
-    with expand_col2:
+        if event_id and event_id != last_event_id:
 
-        if st.button(
-            "⛶",
-            key=f"enlarge_{get_image_name(meal_name)}",
-            help="Enlarge photo"
-        ):
+            st.session_state[last_event_key] = event_id
 
             st.session_state["large_photo_paths"] = [
                 str(path) for path in image_paths
             ]
 
-            show_large_photo()
+            return True
+
+    return False
 
 
 # --------------------------------------------------
@@ -384,6 +394,8 @@ st.divider()
 # DISPLAY RECIPE CARDS
 # --------------------------------------------------
 
+open_large_photo = False
+
 if filtered_meals.empty:
 
     st.warning("No recipes matched your search. Try another meal or ingredient.")
@@ -402,8 +414,6 @@ else:
 
                 meal_name = show_value(meal.get("Meal Name"))
 
-                # Find the three possible recipe photos.
-
                 image_name = get_image_name(meal_name)
 
                 homemade_path = (
@@ -418,18 +428,19 @@ else:
                     INGREDIENTS_DIR / f"{image_name}_i.jpeg"
                 )
 
-                # Recipe card.
-
                 with st.container(border=True):
 
                     st.subheader(meal_name)
 
-                    show_recipe_images(
+                    photo_dialog_requested = show_recipe_images(
                         homemade_path,
                         restaurant_path,
                         ingredients_path,
                         meal_name
                     )
+
+                    if photo_dialog_requested:
+                        open_large_photo = True
 
                     st.write(
                         f"**Estimated ingredient cost:** "
@@ -445,8 +456,6 @@ else:
                         f"**Servings:** "
                         f"{show_value(meal.get('Servings'))}"
                     )
-
-                    # Expandable recipe details.
 
                     with st.expander("View Recipe Details"):
 
@@ -473,8 +482,6 @@ else:
                         )
 
                         st.divider()
-
-                        # Ingredients.
 
                         st.markdown("### Ingredients")
 
@@ -507,8 +514,6 @@ else:
                             st.info("Ingredient details are not available.")
 
                         st.divider()
-
-                        # Nutrition information.
 
                         st.markdown("### Nutrition Information")
 
@@ -547,8 +552,6 @@ else:
 
                         st.divider()
 
-                        # Cooking instructions.
-
                         st.markdown("### Cooking Instructions")
 
                         instructions = show_value(
@@ -562,3 +565,9 @@ else:
                         else:
 
                             st.info("Cooking instructions are not available.")
+
+
+# Open the native Streamlit dialog after all recipe cards are rendered.
+
+if open_large_photo:
+    show_large_photo()
