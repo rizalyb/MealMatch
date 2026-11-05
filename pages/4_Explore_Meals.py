@@ -58,23 +58,23 @@ st.markdown(
         opacity: 1;
     }
 
-    /* Left arrow */
+    /* Left arrow, positioned over the photo */
     div[class*="st-key-photo_prev_"] {
-        left: 8px;
+        left: 18%;
         top: 50%;
         transform: translateY(-50%);
     }
 
-    /* Right arrow */
+    /* Right arrow, positioned over the photo */
     div[class*="st-key-photo_next_"] {
-        right: 8px;
+        right: 18%;
         top: 50%;
         transform: translateY(-50%);
     }
 
-    /* Expand icon */
+    /* Expand icon, positioned inside the bottom-right of the photo */
     div[class*="st-key-photo_expand_"] {
-        right: 8px;
+        right: 18%;
         bottom: 8px;
     }
 
@@ -254,8 +254,8 @@ def show_recipe_images(meal_name):
 
     with st.container(key=viewer_key):
 
-        # Display a larger, centered photo
-        _, image_col, _ = st.columns([0.4, 2.2, 0.4])
+        # Make the regular photo slightly larger
+        _, image_col, _ = st.columns([0.1, 2.8, 0.1])
 
         with image_col:
             st.image(
