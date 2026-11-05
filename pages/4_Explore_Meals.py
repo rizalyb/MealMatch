@@ -235,30 +235,31 @@ def show_recipe_images(meal_name):
         st.info("📷 Recipe photos coming soon.")
         return False
 
-    # Keep track of the current photo for each meal.
+    # Keep track of the current photo.
     photo_key = f"photo_index_{image_name}"
 
     if photo_key not in st.session_state:
         st.session_state[photo_key] = 0
 
-    current_index = st.session_state[photo_key]
+    current_index = (
+        st.session_state[photo_key] % len(image_paths)
+    )
 
-    # Keep the photo index within the available range.
-    current_index = current_index % len(image_paths)
-
-    # CSS positions the buttons over the photo.
+    # Position the photo controls over the image.
     viewer_key = f"photo_viewer_{image_name}"
 
     with st.container(key=viewer_key):
 
-    _, image_col, _ = st.columns([1, 2, 1])
+        # Center the regular recipe photo.
+        _, image_col, _ = st.columns([1, 2, 1])
 
-    with image_col:
-        st.image(
-            image_paths[current_index],
-            use_container_width=True
-        )
+        with image_col:
+            st.image(
+                image_paths[current_index],
+                use_container_width=True
+            )
 
+        # Previous photo arrow.
         if len(image_paths) > 1:
 
             if st.button(
@@ -271,6 +272,7 @@ def show_recipe_images(meal_name):
 
                 st.rerun()
 
+            # Next photo arrow.
             if st.button(
                 "›",
                 key=f"photo_next_{image_name}"
@@ -281,6 +283,7 @@ def show_recipe_images(meal_name):
 
                 st.rerun()
 
+        # Expand photo.
         if st.button(
             "⛶",
             key=f"photo_expand_{image_name}"
