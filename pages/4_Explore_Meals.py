@@ -60,21 +60,21 @@ st.markdown(
 
     /* Left arrow */
     div[class*="st-key-photo_prev_"] {
-        left: 10%;
+        left: 12%;
         top: 50%;
         transform: translateY(-50%);
     }
 
     /* Right arrow */
     div[class*="st-key-photo_next_"] {
-        right: 10%;
+        right: 12%;
         top: 50%;
         transform: translateY(-50%);
     }
 
     /* Expand icon */
     div[class*="st-key-photo_expand_"] {
-        right: 10%;
+        right: 12%;
         bottom: 8px;
     }
     
