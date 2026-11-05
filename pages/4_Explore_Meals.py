@@ -1,9 +1,7 @@
-
 import streamlit as st
 import pandas as pd
 from pathlib import Path
 import re
-
 
 # --------------------------------------------------
 # PAGE SETUP
@@ -21,7 +19,6 @@ st.write("Browse recipes, compare costs, and find meals that fit your preference
 
 st.divider()
 
-
 # --------------------------------------------------
 # LOAD MEAL DATA
 # --------------------------------------------------
@@ -38,7 +35,6 @@ if meals is None or ingredients is None:
 
 meals = meals.copy()
 ingredients = ingredients.copy()
-
 
 # --------------------------------------------------
 # HELPER FUNCTIONS
@@ -71,7 +67,6 @@ def get_image_name(meal_name):
 
     return name
 
-
 # --------------------------------------------------
 # PHOTO NAVIGATION
 # --------------------------------------------------
@@ -100,12 +95,11 @@ def change_large_photo(direction):
         current_index + direction
     ) % len(image_paths)
 
-
 # --------------------------------------------------
 # ENLARGED PHOTO DIALOG
 # --------------------------------------------------
 
-@st.dialog("Enlarged Recipe Photo", width="large")
+@st.dialog("Recipe Photo", width="large")
 def show_large_photo():
 
     image_paths = st.session_state.get("large_photo_paths", [])
@@ -116,39 +110,40 @@ def show_large_photo():
 
     current_index = st.session_state.get("large_photo_index", 0)
 
-    # Display the enlarged photo.
-
-    st.image(
-        image_paths[current_index],
-        use_container_width=True
-    )
-
-    # Photo navigation.
-
     if len(image_paths) > 1:
 
-        previous_col, next_col = st.columns(2)
+        left_col, image_col, right_col = st.columns([1, 10, 1])
 
-        with previous_col:
-
+        with left_col:
             st.button(
-                "← Previous Photo",
+                "‹",
                 key="large_photo_previous",
-                use_container_width=True,
+                help="Previous photo",
                 on_click=change_large_photo,
                 args=(-1,)
             )
 
-        with next_col:
+        with image_col:
+            st.image(
+                image_paths[current_index],
+                use_container_width=True
+            )
 
+        with right_col:
             st.button(
-                "Next Photo →",
+                "›",
                 key="large_photo_next",
-                use_container_width=True,
+                help="Next photo",
                 on_click=change_large_photo,
                 args=(1,)
             )
 
+    else:
+
+        st.image(
+            image_paths[current_index],
+            use_container_width=True
+        )
 
 # --------------------------------------------------
 # RECIPE PHOTO DISPLAY
@@ -189,57 +184,64 @@ def show_recipe_images(
 
     current_index = st.session_state[state_key]
 
-    # Display the selected photo.
-
-    st.image(
-        str(image_paths[current_index]),
-        use_container_width=True
-    )
-
-    # Photo navigation buttons.
+    # Display the photo with arrow controls.
 
     if len(image_paths) > 1:
 
-        previous_col, next_col = st.columns(2)
+        left_col, image_col, right_col = st.columns([1, 10, 1])
 
-        with previous_col:
-
+        with left_col:
             st.button(
-                "← Previous",
+                "‹",
                 key=f"{state_key}_previous",
-                use_container_width=True,
+                help="Previous photo",
                 on_click=change_recipe_photo,
                 args=(state_key, -1, len(image_paths))
             )
 
-        with next_col:
+        with image_col:
+            st.image(
+                str(image_paths[current_index]),
+                use_container_width=True
+            )
 
+        with right_col:
             st.button(
-                "Next →",
+                "›",
                 key=f"{state_key}_next",
-                use_container_width=True,
+                help="Next photo",
                 on_click=change_recipe_photo,
                 args=(state_key, 1, len(image_paths))
             )
 
-    # Open the enlarged photo dialog.
+    else:
 
-    if st.button(
-        "🔍 View Larger Photo",
-        key=f"{state_key}_enlarge",
-        use_container_width=True
-    ):
-
-        st.session_state["large_photo_paths"] = [
-            str(path) for path in image_paths
-        ]
-
-        st.session_state["large_photo_index"] = (
-            st.session_state[state_key]
+        st.image(
+            str(image_paths[current_index]),
+            use_container_width=True
         )
 
-        show_large_photo()
+    # Small expand button.
 
+    expand_col1, expand_col2, expand_col3 = st.columns([1, 10, 1])
+
+    with expand_col2:
+
+        if st.button(
+            "⛶",
+            key=f"{state_key}_enlarge",
+            help="Enlarge photo"
+        ):
+
+            st.session_state["large_photo_paths"] = [
+                str(path) for path in image_paths
+            ]
+
+            st.session_state["large_photo_index"] = (
+                st.session_state[state_key]
+            )
+
+            show_large_photo()
 
 # --------------------------------------------------
 # SEARCH MEALS
@@ -285,7 +287,6 @@ if search_query.strip():
 st.write(f"Showing {len(filtered_meals)} recipes.")
 
 st.divider()
-
 
 # --------------------------------------------------
 # DISPLAY RECIPE CARDS
