@@ -21,6 +21,22 @@ INGREDIENTS_DIR = IMAGE_DIR / "ingredients"
 
 COMPONENT_DIR = APP_DIR / "components" / "meal_photo_viewer"
 
+st.write("DEBUG: Page location:", Path(__file__).resolve())
+st.write("DEBUG: App directory:", APP_DIR)
+st.write("DEBUG: Component folder:", COMPONENT_DIR)
+st.write("DEBUG: Folder exists:", COMPONENT_DIR.exists())
+st.write("DEBUG: HTML file exists:", (COMPONENT_DIR / "index.html").is_file())
+
+if COMPONENT_DIR.exists():
+    st.write("DEBUG: Folder contents:", [
+        file.name for file in COMPONENT_DIR.iterdir()
+    ])
+
+meal_photo_viewer = components.declare_component(
+    "meal_photo_viewer",
+    path=str(COMPONENT_DIR)
+)
+
 st.title("Explore Meals")
 st.write("Browse recipes, compare costs, and find meals that fit your preferences.")
 
