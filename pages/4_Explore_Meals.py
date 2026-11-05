@@ -60,21 +60,21 @@ st.markdown(
 
     /* Left arrow */
     div[class*="st-key-photo_prev_"] {
-        left: 25%;
+        left: 32%;
         top: 50%;
         transform: translateY(-50%);
     }
 
     /* Right arrow */
     div[class*="st-key-photo_next_"] {
-        right: 25%;
+        right: 32%;
         top: 50%;
         transform: translateY(-50%);
     }
 
     /* Expand icon */
     div[class*="st-key-photo_expand_"] {
-        right: 25%;
+        right: 32%;
         bottom: 8px;
     }
 
@@ -255,7 +255,7 @@ def show_recipe_images(meal_name):
     with st.container(key=viewer_key):
 
         # Make the regular photo slightly larger
-        _, image_col, _ = st.columns([0.2, 2.6, 0.2])
+        _, image_col, _ = st.columns([0.35, 2.3, 0.35])
 
         with image_col:
             st.image(
