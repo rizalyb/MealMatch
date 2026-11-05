@@ -19,6 +19,8 @@ HOMEMADE_DIR = IMAGE_DIR / "homemade"
 RESTAURANT_DIR = IMAGE_DIR / "restaurant"
 INGREDIENTS_DIR = IMAGE_DIR / "ingredients"
 
+COMPONENT_DIR = APP_DIR / "components" / "meal_photo_viewer"
+
 st.title("Explore Meals")
 st.write("Browse recipes, compare costs, and find meals that fit your preferences.")
 
@@ -26,12 +28,20 @@ st.divider()
 
 
 # --------------------------------------------------
-# CUSTOM PHOTO VIEWER COMPONENT
+# CHECK AND LOAD PHOTO VIEWER COMPONENT
 # --------------------------------------------------
+
+if not (COMPONENT_DIR / "index.html").is_file():
+    st.error(
+        "The photo viewer component could not be found. "
+        "Check that components/meal_photo_viewer/index.html "
+        "exists in your GitHub repository."
+    )
+    st.stop()
 
 meal_photo_viewer = components.declare_component(
     "meal_photo_viewer",
-    path=str(APP_DIR / "components" / "meal_photo_viewer")
+    path=str(COMPONENT_DIR)
 )
 
 
@@ -58,8 +68,6 @@ ingredients = ingredients.copy()
 # --------------------------------------------------
 
 def show_value(value):
-    """Return a clean value or a placeholder."""
-
     if pd.isna(value) or str(value).strip() == "":
         return "Not available"
 
@@ -67,8 +75,6 @@ def show_value(value):
 
 
 def show_number(value):
-    """Convert a value into a readable number."""
-
     if pd.isna(value) or str(value).strip() == "":
         return "Not available"
 
@@ -76,18 +82,12 @@ def show_number(value):
 
 
 def get_image_name(meal_name):
-    """Convert a meal name into a lowercase image filename."""
-
     name = str(meal_name).lower().strip()
     name = re.sub(r"[^a-z0-9]+", "_", name)
-    name = name.strip("_")
-
-    return name
+    return name.strip("_")
 
 
 def encode_image(image_path):
-    """Convert an image into a format the HTML viewer can display."""
-
     image_path = Path(image_path)
 
     mime_type, _ = mimetypes.guess_type(str(image_path))
@@ -96,13 +96,15 @@ def encode_image(image_path):
         mime_type = "image/jpeg"
 
     with open(image_path, "rb") as image_file:
-        encoded = base64.b64encode(image_file.read()).decode("utf-8")
+        encoded = base64.b64encode(
+            image_file.read()
+        ).decode("utf-8")
 
     return f"data:{mime_type};base64,{encoded}"
 
 
 # --------------------------------------------------
-# HTML PHOTO CAROUSEL FOR THE ENLARGED DIALOG
+# PHOTO VIEWER FOR ENLARGED DIALOG
 # --------------------------------------------------
 
 def build_photo_viewer(image_paths, viewer_height=580):
@@ -189,7 +191,6 @@ def build_photo_viewer(image_paths, viewer_height=580):
     </head>
 
     <body>
-
         <div class="photo-viewer">
 
             <img id="recipe-photo" src="" alt="Recipe photo">
@@ -214,7 +215,6 @@ def build_photo_viewer(image_paths, viewer_height=580):
 
         <script>
             const images = __IMAGES__;
-
             let currentIndex = 0;
 
             const photo = document.getElementById("recipe-photo");
@@ -240,18 +240,15 @@ def build_photo_viewer(image_paths, viewer_height=580):
 
             displayPhoto();
         </script>
-
     </body>
     </html>
     """
 
-    html_code = (
+    return (
         html_template
         .replace("__HEIGHT__", str(viewer_height))
         .replace("__IMAGES__", images_json)
     )
-
-    return html_code
 
 
 # --------------------------------------------------
@@ -309,18 +306,12 @@ def show_recipe_images(
         encode_image(path) for path in image_paths
     ]
 
-    component_key = f"meal_photo_{get_image_name(meal_name)}"
-
     photo_event = meal_photo_viewer(
         images=encoded_images,
         viewer_height=220,
         show_expand=True,
-        key=component_key
+        key=f"meal_photo_{get_image_name(meal_name)}"
     )
-
-    # Open the dialog only for a new expand click.
-    # The event ID prevents the same click from reopening the dialog
-    # during later Streamlit reruns.
 
     if (
         isinstance(photo_event, dict)
@@ -328,12 +319,16 @@ def show_recipe_images(
     ):
 
         event_id = str(photo_event.get("click_id", ""))
-        last_event_key = f"last_expand_event_{get_image_name(meal_name)}"
-        last_event_id = st.session_state.get(last_event_key)
 
-        if event_id and event_id != last_event_id:
+        event_key = (
+            f"last_expand_event_{get_image_name(meal_name)}"
+        )
 
-            st.session_state[last_event_key] = event_id
+        previous_event = st.session_state.get(event_key)
+
+        if event_id and event_id != previous_event:
+
+            st.session_state[event_key] = event_id
 
             st.session_state["large_photo_paths"] = [
                 str(path) for path in image_paths
@@ -398,7 +393,9 @@ open_large_photo = False
 
 if filtered_meals.empty:
 
-    st.warning("No recipes matched your search. Try another meal or ingredient.")
+    st.warning(
+        "No recipes matched your search. Try another meal or ingredient."
+    )
 
 else:
 
@@ -408,7 +405,10 @@ else:
 
         columns = st.columns(3)
 
-        for column, meal in zip(columns, meal_records[start:start + 3]):
+        for column, meal in zip(
+            columns,
+            meal_records[start:start + 3]
+        ):
 
             with column:
 
@@ -511,7 +511,9 @@ else:
 
                         else:
 
-                            st.info("Ingredient details are not available.")
+                            st.info(
+                                "Ingredient details are not available."
+                            )
 
                         st.divider()
 
@@ -548,7 +550,9 @@ else:
 
                         else:
 
-                            st.info("Nutrition information is not available.")
+                            st.info(
+                                "Nutrition information is not available."
+                            )
 
                         st.divider()
 
@@ -564,10 +568,12 @@ else:
 
                         else:
 
-                            st.info("Cooking instructions are not available.")
+                            st.info(
+                                "Cooking instructions are not available."
+                            )
 
 
-# Open the native Streamlit dialog after all recipe cards are rendered.
+# Open the native Streamlit dialog after the recipe cards render.
 
 if open_large_photo:
     show_large_photo()
