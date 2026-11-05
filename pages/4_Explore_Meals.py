@@ -250,22 +250,17 @@ def show_recipe_images(meal_name):
         st.session_state[photo_key] % len(image_paths)
     )
 
-    # Position the photo controls over the image
     viewer_key = f"photo_viewer_{image_name}"
 
     with st.container(key=viewer_key):
 
-        # Center the regular recipe photo
-        _, image_col, _ = st.columns(
-            [1, 2, 1],
-            gap="small"
-        )
+        # Display a larger, centered photo
+        _, image_col, _ = st.columns([0.4, 2.2, 0.4])
 
         with image_col:
             st.image(
                 image_paths[current_index],
-                use_container_width=False,
-                width=750
+                use_container_width=True
             )
 
         # Previous photo arrow
@@ -292,7 +287,7 @@ def show_recipe_images(meal_name):
 
                 st.rerun()
 
-        # Expand photo
+        # Single expand button
         if st.button(
             "⛶",
             key=f"photo_expand_{image_name}"
@@ -309,7 +304,6 @@ def show_recipe_images(meal_name):
             return True
 
     return False
-
 
 # --------------------------------------------------
 # SEARCH MEALS
