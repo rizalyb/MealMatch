@@ -116,12 +116,10 @@ def show_recipe_images(homemade_path, restaurant_path):
 
     if homemade_exists and not restaurant_exists:
         st.image(str(homemade_path), use_container_width=True)
-        st.caption("Homemade")
         return
 
     if restaurant_exists and not homemade_exists:
         st.image(str(restaurant_path), use_container_width=True)
-        st.caption("Restaurant Style")
         return
 
     # Convert both photos into displayable image data.
@@ -198,19 +196,6 @@ def show_recipe_images(homemade_path, restaurant_path):
                 right: 8px;
             }}
 
-            .photo-label {{
-                position: absolute;
-                bottom: 0;
-                left: 0;
-                width: 100%;
-                padding: 7px;
-                text-align: center;
-                background: rgba(0, 0, 0, 0.65);
-                color: white;
-                font-size: 12px;
-                font-weight: 600;
-            }}
-
             @media (hover: none) {{
                 .arrow {{
                     opacity: 1;
@@ -250,10 +235,6 @@ def show_recipe_images(homemade_path, restaurant_path):
             >
                 &#8250;
             </button>
-
-            <div class="photo-label" id="photo-label">
-                Homemade
-            </div>
 
         </div>
 
