@@ -267,21 +267,16 @@ def show_recipe_images(homemade_path, restaurant_path):
 
                 const homemade = document.getElementById("homemade");
                 const restaurant = document.getElementById("restaurant");
-                const label = document.getElementById("photo-label");
 
                 if (currentPhoto === 0) {{
 
                     homemade.classList.add("active");
                     restaurant.classList.remove("active");
 
-                    label.innerText = "Homemade";
-
                 }} else {{
 
                     restaurant.classList.add("active");
                     homemade.classList.remove("active");
-
-                    label.innerText = "Restaurant Style";
 
                 }}
 
