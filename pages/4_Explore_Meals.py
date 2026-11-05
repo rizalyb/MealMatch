@@ -1,3 +1,4 @@
+
 import streamlit as st
 import pandas as pd
 from pathlib import Path
@@ -14,7 +15,7 @@ IMAGE_DIR = APP_DIR / "images"
 HOMEMADE_DIR = IMAGE_DIR / "homemade"
 RESTAURANT_DIR = IMAGE_DIR / "restaurant"
 INGREDIENTS_DIR = IMAGE_DIR / "ingredients"
-s
+
 st.title("Explore Meals")
 
 st.write(
@@ -23,6 +24,7 @@ st.write(
 )
 
 st.divider()
+
 
 # --------------------------------------------------
 # PHOTO HOVER CONTROLS
@@ -103,6 +105,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+
 # --------------------------------------------------
 # LOAD MEAL DATA
 # --------------------------------------------------
@@ -137,6 +140,7 @@ def get_image_name(meal_name):
 
     return name.strip("_")
 
+
 # --------------------------------------------------
 # RECIPE PHOTO DIALOG
 # --------------------------------------------------
@@ -158,7 +162,7 @@ def show_large_photo():
 
     selected_photo = selected_photo % len(image_paths)
 
-    # Display the current photo
+    # Display the current enlarged photo
     st.image(
         image_paths[selected_photo],
         use_container_width=False,
@@ -211,7 +215,8 @@ def show_large_photo():
                 ) % len(image_paths)
 
                 st.rerun(scope="fragment")
-        
+
+
 # --------------------------------------------------
 # RECIPE PHOTO DISPLAY
 # --------------------------------------------------
@@ -235,7 +240,7 @@ def show_recipe_images(meal_name):
         st.info("📷 Recipe photos coming soon.")
         return False
 
-    # Keep track of the current photo.
+    # Keep track of the current photo
     photo_key = f"photo_index_{image_name}"
 
     if photo_key not in st.session_state:
@@ -245,13 +250,16 @@ def show_recipe_images(meal_name):
         st.session_state[photo_key] % len(image_paths)
     )
 
-    # Position the photo controls over the image.
+    # Position the photo controls over the image
     viewer_key = f"photo_viewer_{image_name}"
 
     with st.container(key=viewer_key):
 
-        # Center the regular recipe photo.
-        _, image_col, _ = st.columns([1, 2, 1])
+        # Center the regular recipe photo
+        _, image_col, _ = st.columns(
+            [1, 2, 1],
+            gap="small"
+        )
 
         with image_col:
             st.image(
@@ -259,7 +267,7 @@ def show_recipe_images(meal_name):
                 use_container_width=True
             )
 
-        # Previous photo arrow.
+        # Previous photo arrow
         if len(image_paths) > 1:
 
             if st.button(
@@ -272,7 +280,7 @@ def show_recipe_images(meal_name):
 
                 st.rerun()
 
-            # Next photo arrow.
+            # Next photo arrow
             if st.button(
                 "›",
                 key=f"photo_next_{image_name}"
@@ -283,7 +291,7 @@ def show_recipe_images(meal_name):
 
                 st.rerun()
 
-        # Expand photo.
+        # Expand photo
         if st.button(
             "⛶",
             key=f"photo_expand_{image_name}"
@@ -300,6 +308,7 @@ def show_recipe_images(meal_name):
             return True
 
     return False
+
 
 # --------------------------------------------------
 # SEARCH MEALS
