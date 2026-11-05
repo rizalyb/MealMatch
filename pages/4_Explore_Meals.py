@@ -1,21 +1,15 @@
+
 import streamlit as st
 import pandas as pd
 from pathlib import Path
 import streamlit.components.v1 as components
 import base64
 import re
+import mimetypes
 
 
 # --------------------------------------------------
-# PAGE TITLE
-# --------------------------------------------------
-
-st.title("📖 Explore All Meals")
-st.write("Browse meals, view ingredients, and explore recipes for your meal plan.")
-
-
-# --------------------------------------------------
-# IMAGE FOLDERS
+# PAGE SETUP
 # --------------------------------------------------
 
 APP_DIR = Path(__file__).resolve().parent.parent
@@ -25,17 +19,28 @@ HOMEMADE_DIR = IMAGE_DIR / "homemade"
 RESTAURANT_DIR = IMAGE_DIR / "restaurant"
 INGREDIENTS_DIR = IMAGE_DIR / "ingredients"
 
+st.title("Explore Meals")
+st.write("Browse recipes, compare costs, and find meals that fit your preferences.")
+
+st.divider()
+
 
 # --------------------------------------------------
-# LOAD MEALS AND INGREDIENTS
+# LOAD MEAL DATA
 # --------------------------------------------------
 
 meals = st.session_state.get("meals")
 ingredients = st.session_state.get("ingredients")
 
 if meals is None or ingredients is None:
-    st.error("Meal data could not be loaded. Please return to the Home page and try again.")
+    st.error(
+        "Meal data could not be found. "
+        "Please return to the Home page and try again."
+    )
     st.stop()
+
+meals = meals.copy()
+ingredients = ingredients.copy()
 
 
 # --------------------------------------------------
@@ -43,70 +48,58 @@ if meals is None or ingredients is None:
 # --------------------------------------------------
 
 def show_value(value):
-    """Return a clean value or display a placeholder."""
+    """Return a clean value or a placeholder."""
 
-    if pd.isna(value):
-        return "N/A"
+    if pd.isna(value) or str(value).strip() == "":
+        return "Not available"
 
-    return str(value)
+    return str(value).strip()
 
 
 def show_number(value):
-    """Format numbers and remove existing units or currency symbols."""
+    """Convert a value into a readable number."""
 
-    if pd.isna(value):
-        return "N/A"
+    if pd.isna(value) or str(value).strip() == "":
+        return "Not available"
 
-    cleaned_value = str(value).strip()
-
-    cleaned_value = (
-        cleaned_value
-        .replace("$", "")
-        .replace(",", "")
-        .replace("g", "")
-        .replace("mg", "")
-        .replace("min", "")
-        .strip()
-    )
-
-    try:
-        number = float(cleaned_value)
-
-        if number.is_integer():
-            return f"{int(number):,}"
-
-        return f"{number:,.2f}".rstrip("0").rstrip(".")
-
-    except ValueError:
-        return str(value)
+    return str(value).strip()
 
 
 def get_image_name(meal_name):
-    """Create a consistent image filename from the recipe name."""
+    """Convert a meal name into a lowercase image filename."""
 
-    image_name = meal_name.lower().strip()
+    name = str(meal_name).lower().strip()
+    name = re.sub(r"[^a-z0-9]+", "_", name)
+    name = name.strip("_")
 
-    image_name = re.sub(r"[^a-z0-9]+", "_", image_name)
-
-    return image_name.strip("_")
+    return name
 
 
 def encode_image(image_path):
     """Convert an image into a format that HTML can display."""
 
     with open(image_path, "rb") as image_file:
-        image_data = base64.b64encode(image_file.read()).decode("utf-8")
+        encoded = base64.b64encode(image_file.read()).decode("utf-8")
 
-    return f"data:image/jpeg;base64,{image_data}"
+    mime_type = mimetypes.guess_type(str(image_path))[0]
+
+    if mime_type is None:
+        mime_type = "image/jpeg"
+
+    return f"data:{mime_type};base64,{encoded}"
 
 
 # --------------------------------------------------
-# HOMEMADE, RESTAURANT, AND INGREDIENT PHOTOS
+# RECIPE PHOTO DISPLAY
 # --------------------------------------------------
 
-def show_recipe_images(homemade_path, restaurant_path, ingredients_path):
+def show_recipe_images(
+    homemade_path,
+    restaurant_path,
+    ingredients_path
+):
 
-    # Collect all available photos.
+    # Collect available photos.
 
     image_paths = []
 
@@ -119,13 +112,13 @@ def show_recipe_images(homemade_path, restaurant_path, ingredients_path):
     if ingredients_path.exists():
         image_paths.append(ingredients_path)
 
-    # Display a message if no photos exist.
+    # Show a message if no photos exist.
 
     if not image_paths:
         st.info("📷 Recipe photos coming soon.")
         return
 
-    # Display a single photo without arrows.
+    # Use Streamlit's image viewer when only one photo exists.
 
     if len(image_paths) == 1:
         st.image(
@@ -134,7 +127,7 @@ def show_recipe_images(homemade_path, restaurant_path, ingredients_path):
         )
         return
 
-    # Convert available photos for the HTML viewer.
+    # Convert available photos into HTML-compatible images.
 
     images = [
         encode_image(image_path)
@@ -144,8 +137,6 @@ def show_recipe_images(homemade_path, restaurant_path, ingredients_path):
     image_sources = ", ".join(
         f'"{image}"' for image in images
     )
-
-    # HTML photo viewer with arrows.
 
     html = f"""
     <!DOCTYPE html>
@@ -172,6 +163,7 @@ def show_recipe_images(homemade_path, restaurant_path, ingredients_path):
                 overflow: hidden;
                 border-radius: 8px;
                 background: #eeeeee;
+                cursor: zoom-in;
             }}
 
             .recipe-photo {{
@@ -223,7 +215,11 @@ def show_recipe_images(homemade_path, restaurant_path, ingredients_path):
 
     <body>
 
-        <div class="photo-container">
+        <div
+            class="photo-container"
+            onclick="openLargeImage()"
+            title="Click to view larger image"
+        >
 
             <img
                 id="recipe-photo"
@@ -233,14 +229,16 @@ def show_recipe_images(homemade_path, restaurant_path, ingredients_path):
 
             <button
                 class="arrow left-arrow"
-                onclick="changePhoto(-1)"
+                onclick="changePhoto(-1, event)"
+                aria-label="Previous photo"
             >
                 &#8249;
             </button>
 
             <button
                 class="arrow right-arrow"
-                onclick="changePhoto(1)"
+                onclick="changePhoto(1, event)"
+                aria-label="Next photo"
             >
                 &#8250;
             </button>
@@ -253,7 +251,11 @@ def show_recipe_images(homemade_path, restaurant_path, ingredients_path):
 
             let currentPhoto = 0;
 
-            function changePhoto(direction) {{
+            function changePhoto(direction, event) {{
+
+                if (event) {{
+                    event.stopPropagation();
+                }}
 
                 currentPhoto = (
                     currentPhoto + direction + imageSources.length
@@ -261,6 +263,56 @@ def show_recipe_images(homemade_path, restaurant_path, ingredients_path):
 
                 document.getElementById("recipe-photo").src =
                     imageSources[currentPhoto];
+
+            }}
+
+            function openLargeImage() {{
+
+                const newTab = window.open("", "_blank");
+
+                if (!newTab) {{
+                    return;
+                }}
+
+                newTab.document.write(`
+                    <!DOCTYPE html>
+                    <html>
+
+                    <head>
+
+                        <title>MealMatch Recipe Photo</title>
+
+                        <style>
+
+                            body {{
+                                margin: 0;
+                                background: #111111;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                min-height: 100vh;
+                            }}
+
+                            img {{
+                                max-width: 95vw;
+                                max-height: 95vh;
+                                object-fit: contain;
+                            }}
+
+                        </style>
+
+                    </head>
+
+                    <body>
+
+                        <img src="${{imageSources[currentPhoto]}}">
+
+                    </body>
+
+                    </html>
+                `);
+
+                newTab.document.close();
 
             }}
 
@@ -282,103 +334,91 @@ def show_recipe_images(homemade_path, restaurant_path, ingredients_path):
 # SEARCH MEALS
 # --------------------------------------------------
 
-st.subheader("Find a Meal")
+st.subheader("Find a Recipe")
 
-search_term = st.text_input(
+search_query = st.text_input(
     "Search by meal name or ingredient",
-    placeholder="Example: Chicken, Rice, or Egg"
+    placeholder="Example: Chicken, pasta, or burrito"
 )
 
 filtered_meals = meals.copy()
 
-if search_term:
+if search_query.strip():
 
-    search_term = search_term.lower().strip()
+    search_query = search_query.lower().strip()
 
-    meal_name_match = (
-        filtered_meals["Meal Name"]
-        .astype(str)
-        .str.lower()
-        .str.contains(search_term, na=False)
+    meal_matches = filtered_meals["Meal Name"].astype(str).str.lower().str.contains(
+        search_query,
+        na=False
     )
 
-    ingredient_match = (
-        ingredients.groupby("Meal Name")["Ingredients"]
-        .apply(
-            lambda items: items.astype(str)
-            .str.lower()
-            .str.contains(search_term, na=False)
-            .any()
+    ingredient_matches = ingredients[
+        ingredients["Ingredients"].astype(str).str.lower().str.contains(
+            search_query,
+            na=False
         )
-    )
+    ]["Meal Name"].dropna().unique()
 
-    matching_meals = ingredient_match[
-        ingredient_match
-    ].index.astype(str).tolist()
-
-    ingredient_name_match = (
-        filtered_meals["Meal Name"]
-        .astype(str)
-        .isin(matching_meals)
-    )
+    ingredient_matches = [
+        str(name).lower() for name in ingredient_matches
+    ]
 
     filtered_meals = filtered_meals[
-        meal_name_match | ingredient_name_match
+        meal_matches |
+        filtered_meals["Meal Name"].astype(str).str.lower().isin(
+            ingredient_matches
+        )
     ]
 
 
-# --------------------------------------------------
-# DISPLAY MEALS
-# --------------------------------------------------
+st.write(f"Showing {len(filtered_meals)} recipes.")
 
-st.subheader("Available Meals")
+st.divider()
 
-st.write(f"Showing {len(filtered_meals)} meals.")
+
+# --------------------------------------------------
+# DISPLAY RECIPE CARDS
+# --------------------------------------------------
 
 if filtered_meals.empty:
 
-    st.warning("No meals found. Try another search.")
+    st.warning("No recipes matched your search. Try another meal or ingredient.")
 
 else:
 
-    meal_rows = filtered_meals.to_dict("records")
+    meal_records = filtered_meals.to_dict("records")
 
-    # Display three meal cards per row.
-
-    for row_start in range(0, len(meal_rows), 3):
+    for start in range(0, len(meal_records), 3):
 
         columns = st.columns(3)
 
-        for column_index, meal in enumerate(
-            meal_rows[row_start:row_start + 3]
-        ):
+        for column, meal in zip(columns, meal_records[start:start + 3]):
 
-            with columns[column_index]:
+            with column:
 
                 meal_name = show_value(meal.get("Meal Name"))
 
+                # Find the three possible recipe photos.
+
+                image_name = get_image_name(meal_name)
+
+                homemade_path = (
+                    HOMEMADE_DIR / f"{image_name}_hm.jpeg"
+                )
+
+                restaurant_path = (
+                    RESTAURANT_DIR / f"{image_name}_r.jpeg"
+                )
+
+                ingredients_path = (
+                    INGREDIENTS_DIR / f"{image_name}_i.jpeg"
+                )
+
+                # Recipe card.
+
                 with st.container(border=True):
 
-                    # ----------------------------------
-                    # RECIPE PHOTOS
-                    # ----------------------------------
-
-                    image_name = get_image_name(meal_name)
-
-                    homemade_path = (
-                        HOMEMADE_DIR /
-                        f"{image_name}_hm.jpeg"
-                    )
-
-                    restaurant_path = (
-                        RESTAURANT_DIR /
-                        f"{image_name}_r.jpeg"
-                    )
-
-                    ingredients_path = (
-                        INGREDIENTS_DIR /
-                        f"{image_name}_i.jpeg"
-                    )
+                    st.subheader(meal_name)
 
                     show_recipe_images(
                         homemade_path,
@@ -386,127 +426,134 @@ else:
                         ingredients_path
                     )
 
-                    # ----------------------------------
-                    # MEAL NAME
-                    # ----------------------------------
-
-                    st.markdown(f"### {meal_name}")
-
-                    # ----------------------------------
-                    # BASIC MEAL INFORMATION
-                    # ----------------------------------
-
-                    cost = show_number(
-                        meal.get("Ingredient Cost")
+                    st.write(
+                        f"**Estimated ingredient cost:** "
+                        f"{show_value(meal.get('Ingredient Cost'))}"
                     )
 
-                    total_time = show_number(
-                        meal.get("Total Time")
+                    st.write(
+                        f"**Total time:** "
+                        f"{show_value(meal.get('Total Time'))}"
                     )
 
-                    st.write(f"💰 Cost: ${cost}")
+                    st.write(
+                        f"**Servings:** "
+                        f"{show_value(meal.get('Servings'))}"
+                    )
 
-                    st.write(f"⏱️ Total Time: {total_time} min")
-
-                    # ----------------------------------
-                    # RECIPE DETAILS
-                    # ----------------------------------
+                    # Expandable recipe details.
 
                     with st.expander("View Recipe Details"):
 
-                        st.markdown("#### Meal Information")
+                        st.markdown("### Meal Information")
 
                         st.write(
-                            f"Prep Time: {show_number(meal.get('Prep Time'))} min"
+                            f"**Dietary type:** "
+                            f"{show_value(meal.get('Dietary Type'))}"
                         )
 
                         st.write(
-                            f"Cooking Time: {show_number(meal.get('Cooking Time'))} min"
+                            f"**Food preferences:** "
+                            f"{show_value(meal.get('Food Preferences'))}"
                         )
 
                         st.write(
-                            f"Servings: {show_value(meal.get('Servings'))}"
+                            f"**Preparation time:** "
+                            f"{show_value(meal.get('Prep Time'))}"
                         )
 
                         st.write(
-                            f"Dietary Type: {show_value(meal.get('Dietary Type'))}"
+                            f"**Cooking time:** "
+                            f"{show_value(meal.get('Cooking Time'))}"
                         )
 
-                        st.write(
-                            f"Food Preferences: {show_value(meal.get('Food Preferences'))}"
-                        )
+                        st.divider()
 
-                        # ----------------------------------
-                        # INGREDIENTS
-                        # ----------------------------------
+                        # Ingredients.
 
-                        st.markdown("#### Ingredients")
+                        st.markdown("### Ingredients")
 
                         meal_ingredients = ingredients[
-                            ingredients["Meal Name"].astype(str) == str(meal_name)
-                        ]
+                            ingredients["Meal Name"].astype(str).str.lower()
+                            == meal_name.lower()
+                        ].copy()
 
                         if not meal_ingredients.empty:
 
-                            ingredient_display = meal_ingredients[
-                                ["Ingredients", "Quantity", "Unit"]
-                            ].copy()
-
-                            ingredient_display.columns = [
-                                "Ingredient",
-                                "Quantity",
-                                "Unit"
+                            display_columns = [
+                                column_name
+                                for column_name in [
+                                    "Ingredients",
+                                    "Quantity",
+                                    "Unit",
+                                    "Estimated Cost"
+                                ]
+                                if column_name in meal_ingredients.columns
                             ]
 
                             st.dataframe(
-                                ingredient_display,
+                                meal_ingredients[display_columns],
                                 hide_index=True,
                                 use_container_width=True
                             )
 
                         else:
 
-                            st.write("No ingredient information available.")
+                            st.info("Ingredient details are not available.")
 
-                        # ----------------------------------
-                        # NUTRITION INFORMATION
-                        # ----------------------------------
+                        st.divider()
 
-                        st.markdown("#### Nutrition Information")
+                        # Nutrition information.
 
-                        nutrition_fields = {
-                            "Calories": " kcal",
-                            "Total Fat": " g",
-                            "Cholesterol": " mg",
-                            "Sodium": " mg",
-                            "Total Carbohydrates": " g",
-                            "Dietary Fiber": " g",
-                            "Total Sugars": " g",
-                            "Protein": " g"
-                        }
+                        st.markdown("### Nutrition Information")
 
-                        nutrition_columns = st.columns(2)
+                        nutrition_columns = [
+                            ("Calories", "Calories"),
+                            ("Total Fat", "Total Fat"),
+                            ("Cholesterol", "Cholesterol"),
+                            ("Sodium", "Sodium"),
+                            ("Total Carbohydrates", "Carbohydrates"),
+                            ("Dietary Fiber", "Dietary Fiber"),
+                            ("Total Sugars", "Total Sugars"),
+                            ("Protein", "Protein")
+                        ]
 
-                        for index, (field, unit) in enumerate(
-                            nutrition_fields.items()
-                        ):
+                        nutrition_values = []
 
-                            value = meal.get(field)
+                        for column_name, label in nutrition_columns:
 
-                            with nutrition_columns[index % 2]:
+                            value = show_value(
+                                meal.get(column_name)
+                            )
 
-                                st.write(
-                                    f"**{field}:** {show_number(value)}{unit}"
+                            if value != "Not available":
+                                nutrition_values.append(
+                                    f"**{label}:** {value}"
                                 )
 
-                        # ----------------------------------
-                        # COOKING INSTRUCTIONS
-                        # ----------------------------------
+                        if nutrition_values:
 
-                        st.markdown("#### Cooking Instructions")
+                            for value in nutrition_values:
+                                st.write(value)
+
+                        else:
+
+                            st.info("Nutrition information is not available.")
+
+                        st.divider()
+
+                        # Cooking instructions.
+
+                        st.markdown("### Cooking Instructions")
 
                         instructions = show_value(
                             meal.get("Cooking Instructions")
                         )
 
-                        st.write(instructions)
+                        if instructions != "Not available":
+
+                            st.write(instructions)
+
+                        else:
+
+                            st.info("Cooking instructions are not available.")
