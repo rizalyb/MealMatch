@@ -137,7 +137,6 @@ def get_image_name(meal_name):
 
     return name.strip("_")
 
-
 # --------------------------------------------------
 # RECIPE PHOTO DIALOG
 # --------------------------------------------------
@@ -157,26 +156,60 @@ def show_large_photo():
         "large_photo_index", 0
     )
 
-    selected_photo = min(
-        selected_photo,
-        len(image_paths) - 1
-    )
+    selected_photo = selected_photo % len(image_paths)
 
+    # Display the current photo
     st.image(
         image_paths[selected_photo],
         use_container_width=True
     )
 
+    # Display photo category
+    photo_name = Path(
+        image_paths[selected_photo]
+    ).stem
+
+    if photo_name.endswith("_hm"):
+        photo_label = "Homemade"
+    elif photo_name.endswith("_r"):
+        photo_label = "Restaurant"
+    elif photo_name.endswith("_i"):
+        photo_label = "Ingredients"
+    else:
+        photo_label = "Recipe Photo"
+
+    st.caption(
+        f"{photo_label} Photo ({selected_photo + 1} of {len(image_paths)})"
+    )
+
+    # Navigation arrows
     if len(image_paths) > 1:
 
-        selected_photo = st.selectbox(
-            "Choose a photo",
-            range(len(image_paths)),
-            index=selected_photo,
-            format_func=lambda index: Path(
-                image_paths[index]
-            ).stem.replace("_", " ").title()
-        )
+        previous_col, next_col = st.columns(2)
+
+        with previous_col:
+            if st.button(
+                "← Previous",
+                use_container_width=True,
+                key="dialog_previous_photo"
+            ):
+                st.session_state["large_photo_index"] = (
+                    selected_photo - 1
+                ) % len(image_paths)
+
+                st.rerun()
+
+        with next_col:
+            if st.button(
+                "Next →",
+                use_container_width=True,
+                key="dialog_next_photo"
+            ):
+                st.session_state["large_photo_index"] = (
+                    selected_photo + 1
+                ) % len(image_paths)
+
+                st.rerun()
         
 # --------------------------------------------------
 # RECIPE PHOTO DISPLAY
