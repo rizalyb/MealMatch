@@ -24,6 +24,84 @@ st.write(
 
 st.divider()
 
+# --------------------------------------------------
+# PHOTO HOVER CONTROLS
+# --------------------------------------------------
+
+st.markdown(
+    """
+    <style>
+
+    /* Make each photo container the positioning reference */
+    div[class*="st-key-photo_viewer_"] {
+        position: relative;
+    }
+
+    /* Hide photo controls until the photo area is hovered */
+    div[class*="st-key-photo_prev_"],
+    div[class*="st-key-photo_next_"],
+    div[class*="st-key-photo_expand_"] {
+        position: absolute !important;
+        z-index: 10;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+    }
+
+    div[class*="st-key-photo_viewer_"]:hover
+    div[class*="st-key-photo_prev_"],
+    div[class*="st-key-photo_viewer_"]:hover
+    div[class*="st-key-photo_next_"],
+    div[class*="st-key-photo_viewer_"]:hover
+    div[class*="st-key-photo_expand_"] {
+        opacity: 1;
+    }
+
+    /* Left arrow */
+    div[class*="st-key-photo_prev_"] {
+        left: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+    /* Right arrow */
+    div[class*="st-key-photo_next_"] {
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+    /* Expand icon */
+    div[class*="st-key-photo_expand_"] {
+        right: 8px;
+        bottom: 8px;
+    }
+
+    /* Style the control buttons */
+    div[class*="st-key-photo_prev_"] button,
+    div[class*="st-key-photo_next_"] button,
+    div[class*="st-key-photo_expand_"] button {
+        border-radius: 50%;
+        background-color: rgba(0, 0, 0, 0.65);
+        color: white;
+        border: none;
+        min-width: 38px;
+        width: 38px;
+        height: 38px;
+        padding: 0;
+        font-size: 22px;
+    }
+
+    div[class*="st-key-photo_prev_"] button:hover,
+    div[class*="st-key-photo_next_"] button:hover,
+    div[class*="st-key-photo_expand_"] button:hover {
+        background-color: rgba(0, 0, 0, 0.85);
+        color: white;
+    }
+
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
 # --------------------------------------------------
 # LOAD MEAL DATA
@@ -75,25 +153,31 @@ def show_large_photo():
         st.info("No recipe photos are available.")
         return
 
-    if len(image_paths) > 1:
+    selected_photo = st.session_state.get(
+        "large_photo_index", 0
+    )
 
-        selected_photo = st.selectbox(
-            "Choose a photo",
-            range(len(image_paths)),
-            format_func=lambda index: Path(
-                image_paths[index]
-            ).stem.replace("_", " ").title()
-        )
-
-    else:
-        selected_photo = 0
+    selected_photo = min(
+        selected_photo,
+        len(image_paths) - 1
+    )
 
     st.image(
         image_paths[selected_photo],
         use_container_width=True
     )
 
+    if len(image_paths) > 1:
 
+        selected_photo = st.selectbox(
+            "Choose a photo",
+            range(len(image_paths)),
+            index=selected_photo,
+            format_func=lambda index: Path(
+                image_paths[index]
+            ).stem.replace("_", " ").title()
+        )
+        
 # --------------------------------------------------
 # RECIPE PHOTO DISPLAY
 # --------------------------------------------------
@@ -117,30 +201,65 @@ def show_recipe_images(meal_name):
         st.info("📷 Recipe photos coming soon.")
         return False
 
-    st.image(
-        image_paths[0],
-        use_container_width=True
-    )
+    # Keep track of the current photo for each meal.
+    photo_key = f"photo_index_{image_name}"
 
-    if len(image_paths) > 1:
-        st.caption(
-            f"{len(image_paths)} recipe photos available."
+    if photo_key not in st.session_state:
+        st.session_state[photo_key] = 0
+
+    current_index = st.session_state[photo_key]
+
+    # Keep the photo index within the available range.
+    current_index = current_index % len(image_paths)
+
+    # CSS positions the buttons over the photo.
+    viewer_key = f"photo_viewer_{image_name}"
+
+    with st.container(key=viewer_key):
+
+        st.image(
+            image_paths[current_index],
+            use_container_width=True
         )
 
-    if st.button(
-        "View Photos",
-        key=f"view_photos_{image_name}",
-        use_container_width=True
-    ):
+        if len(image_paths) > 1:
 
-        st.session_state["large_photo_paths"] = [
-            str(path) for path in image_paths
-        ]
+            if st.button(
+                "‹",
+                key=f"photo_prev_{image_name}"
+            ):
+                st.session_state[photo_key] = (
+                    current_index - 1
+                ) % len(image_paths)
 
-        return True
+                st.rerun()
+
+            if st.button(
+                "›",
+                key=f"photo_next_{image_name}"
+            ):
+                st.session_state[photo_key] = (
+                    current_index + 1
+                ) % len(image_paths)
+
+                st.rerun()
+
+        if st.button(
+            "⛶",
+            key=f"photo_expand_{image_name}"
+        ):
+
+            st.session_state["large_photo_paths"] = [
+                str(path) for path in image_paths
+            ]
+
+            st.session_state["large_photo_index"] = (
+                current_index
+            )
+
+            return True
 
     return False
-
 
 # --------------------------------------------------
 # SEARCH MEALS
