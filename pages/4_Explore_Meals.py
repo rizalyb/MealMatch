@@ -93,6 +93,7 @@ def encode_image(image_path):
 # RECIPE PHOTO DISPLAY
 # --------------------------------------------------
 
+
 def show_recipe_images(
     homemade_path,
     restaurant_path,
@@ -112,13 +113,11 @@ def show_recipe_images(
     if ingredients_path.exists():
         image_paths.append(ingredients_path)
 
-    # Show a message if no photos exist.
-
     if not image_paths:
         st.info("📷 Recipe photos coming soon.")
         return
 
-    # Use Streamlit's image viewer when only one photo exists.
+    # Display one photo using Streamlit's built-in viewer.
 
     if len(image_paths) == 1:
         st.image(
@@ -127,7 +126,7 @@ def show_recipe_images(
         )
         return
 
-    # Convert available photos into HTML-compatible images.
+    # Convert photos for the HTML viewer.
 
     images = [
         encode_image(image_path)
@@ -209,16 +208,61 @@ def show_recipe_images(
                 }}
             }}
 
+            /* Enlarged image overlay */
+
+            .image-overlay {{
+                display: none;
+                position: fixed;
+                inset: 0;
+                width: 100vw;
+                height: 100vh;
+                background: rgba(0, 0, 0, 0.92);
+                z-index: 999999;
+                align-items: center;
+                justify-content: center;
+                cursor: zoom-out;
+            }}
+
+            .image-overlay.active {{
+                display: flex;
+            }}
+
+            .large-image {{
+                max-width: 90%;
+                max-height: 85%;
+                object-fit: contain;
+                cursor: default;
+                border-radius: 6px;
+            }}
+
+            .close-button {{
+                position: absolute;
+                top: 20px;
+                right: 25px;
+                border: none;
+                background: transparent;
+                color: white;
+                font-size: 38px;
+                cursor: pointer;
+                z-index: 1000000;
+            }}
+
+            .close-button:hover {{
+                color: #cccccc;
+            }}
+
         </style>
 
     </head>
 
     <body>
 
+        <!-- Recipe photo -->
+
         <div
             class="photo-container"
             onclick="openLargeImage()"
-            title="Click to view larger image"
+            title="Click to enlarge photo"
         >
 
             <img
@@ -230,7 +274,6 @@ def show_recipe_images(
             <button
                 class="arrow left-arrow"
                 onclick="changePhoto(-1, event)"
-                aria-label="Previous photo"
             >
                 &#8249;
             </button>
@@ -238,12 +281,38 @@ def show_recipe_images(
             <button
                 class="arrow right-arrow"
                 onclick="changePhoto(1, event)"
-                aria-label="Next photo"
             >
                 &#8250;
             </button>
 
         </div>
+
+
+        <!-- Enlarged photo overlay -->
+
+        <div
+            id="image-overlay"
+            class="image-overlay"
+            onclick="closeLargeImage()"
+        >
+
+            <button
+                class="close-button"
+                onclick="closeLargeImage(event)"
+                aria-label="Close enlarged image"
+            >
+                &times;
+            </button>
+
+            <img
+                id="large-image"
+                class="large-image"
+                src="{images[0]}"
+                onclick="event.stopPropagation()"
+            >
+
+        </div>
+
 
         <script>
 
@@ -253,9 +322,7 @@ def show_recipe_images(
 
             function changePhoto(direction, event) {{
 
-                if (event) {{
-                    event.stopPropagation();
-                }}
+                event.stopPropagation();
 
                 currentPhoto = (
                     currentPhoto + direction + imageSources.length
@@ -264,57 +331,40 @@ def show_recipe_images(
                 document.getElementById("recipe-photo").src =
                     imageSources[currentPhoto];
 
+                document.getElementById("large-image").src =
+                    imageSources[currentPhoto];
+
             }}
 
             function openLargeImage() {{
 
-                const newTab = window.open("", "_blank");
+                const overlay = document.getElementById("image-overlay");
 
-                if (!newTab) {{
-                    return;
-                }}
+                document.getElementById("large-image").src =
+                    imageSources[currentPhoto];
 
-                newTab.document.write(`
-                    <!DOCTYPE html>
-                    <html>
-
-                    <head>
-
-                        <title>MealMatch Recipe Photo</title>
-
-                        <style>
-
-                            body {{
-                                margin: 0;
-                                background: #111111;
-                                display: flex;
-                                align-items: center;
-                                justify-content: center;
-                                min-height: 100vh;
-                            }}
-
-                            img {{
-                                max-width: 95vw;
-                                max-height: 95vh;
-                                object-fit: contain;
-                            }}
-
-                        </style>
-
-                    </head>
-
-                    <body>
-
-                        <img src="${{imageSources[currentPhoto]}}">
-
-                    </body>
-
-                    </html>
-                `);
-
-                newTab.document.close();
+                overlay.classList.add("active");
 
             }}
+
+            function closeLargeImage(event) {{
+
+                if (event) {{
+                    event.stopPropagation();
+                }}
+
+                document.getElementById("image-overlay")
+                    .classList.remove("active");
+
+            }}
+
+            document.addEventListener("keydown", function(event) {{
+
+                if (event.key === "Escape") {{
+                    closeLargeImage();
+                }}
+
+            }});
 
         </script>
 
@@ -328,7 +378,6 @@ def show_recipe_images(
         height=155,
         scrolling=False
     )
-
 
 # --------------------------------------------------
 # SEARCH MEALS
