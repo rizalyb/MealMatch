@@ -14,7 +14,7 @@ IMAGE_DIR = APP_DIR / "images"
 HOMEMADE_DIR = IMAGE_DIR / "homemade"
 RESTAURANT_DIR = IMAGE_DIR / "restaurant"
 INGREDIENTS_DIR = IMAGE_DIR / "ingredients"
-
+s
 st.title("Explore Meals")
 
 st.write(
@@ -251,11 +251,13 @@ def show_recipe_images(meal_name):
 
     with st.container(key=viewer_key):
 
-        st.image(
-            image_paths[current_index],
-            use_container_width=False,
-            width=380
-        )
+        _, image_col, _ = st.columns([1, 2, 1])
+
+with image_col:
+    st.image(
+        image_paths[current_index],
+        use_container_width=True
+    )
 
         if len(image_paths) > 1:
 
