@@ -254,7 +254,7 @@ def show_recipe_images(meal_name):
         st.image(
             image_paths[current_index],
             use_container_width=False,
-            width=220
+            width=380
         )
 
         if len(image_paths) > 1:
