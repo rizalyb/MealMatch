@@ -23,6 +23,7 @@ APP_DIR = Path(__file__).resolve().parent.parent
 IMAGE_DIR = APP_DIR / "images"
 HOMEMADE_DIR = IMAGE_DIR / "homemade"
 RESTAURANT_DIR = IMAGE_DIR / "restaurant"
+INGREDIENTS_DIR = IMAGE_DIR / "ingredients"
 
 
 # --------------------------------------------------
@@ -103,14 +104,157 @@ def encode_image(image_path):
 # HOMEMADE AND RESTAURANT PHOTO DISPLAY
 # --------------------------------------------------
 
-def show_recipe_images(homemade_path, restaurant_path):
+def show_recipe_images(homemade_path, restaurant_path, ingredients_path):
 
-    homemade_exists = homemade_path.exists()
-    restaurant_exists = restaurant_path.exists()
+    images = []
 
-    if not homemade_exists and not restaurant_exists:
+    if homemade_path.exists():
+        images.append(encode_image(homemade_path))
+
+    if restaurant_path.exists():
+        images.append(encode_image(restaurant_path))
+
+    if ingredients_path.exists():
+        images.append(encode_image(ingredients_path))
+
+    if not images:
         st.info("📷 Recipe photos coming soon.")
         return
+
+    if len(images) == 1:
+        st.image(images[0], use_container_width=True)
+        return
+
+    image_sources = ", ".join(
+        f'"{image}"' for image in images
+    )
+
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+
+        <style>
+
+            * {{
+                box-sizing: border-box;
+            }}
+
+            body {{
+                margin: 0;
+                padding: 0;
+            }}
+
+            .photo-container {{
+                position: relative;
+                width: 100%;
+                height: 150px;
+                overflow: hidden;
+                border-radius: 8px;
+                background: #eeeeee;
+            }}
+
+            .recipe-photo {{
+                width: 100%;
+                height: 150px;
+                object-fit: cover;
+                display: block;
+            }}
+
+            .arrow {{
+                position: absolute;
+                top: 50%;
+                transform: translateY(-50%);
+                border: none;
+                border-radius: 50%;
+                width: 30px;
+                height: 30px;
+                background: rgba(0, 0, 0, 0.65);
+                color: white;
+                font-size: 20px;
+                cursor: pointer;
+                opacity: 0;
+                transition: opacity 0.2s;
+                z-index: 2;
+            }}
+
+            .photo-container:hover .arrow,
+            .arrow:focus {{
+                opacity: 1;
+            }}
+
+            .left-arrow {{
+                left: 8px;
+            }}
+
+            .right-arrow {{
+                right: 8px;
+            }}
+
+            @media (hover: none) {{
+                .arrow {{
+                    opacity: 1;
+                }}
+            }}
+
+        </style>
+
+    </head>
+
+    <body>
+
+        <div class="photo-container">
+
+            <img
+                id="recipe-photo"
+                class="recipe-photo"
+                src="{images[0]}"
+            >
+
+            <button
+                class="arrow left-arrow"
+                onclick="changePhoto(-1)"
+            >
+                &#8249;
+            </button>
+
+            <button
+                class="arrow right-arrow"
+                onclick="changePhoto(1)"
+            >
+                &#8250;
+            </button>
+
+        </div>
+
+        <script>
+
+            const imageSources = [{image_sources}];
+
+            let currentPhoto = 0;
+
+            function changePhoto(direction) {{
+
+                currentPhoto = (
+                    currentPhoto + direction + imageSources.length
+                ) % imageSources.length;
+
+                document.getElementById("recipe-photo").src =
+                    imageSources[currentPhoto];
+
+            }}
+
+        </script>
+
+    </body>
+    </html>
+    """
+
+    components.html(
+        html,
+        height=155,
+        scrolling=False
+    )
 
     # If only one photo exists, display that photo.
 
@@ -363,19 +507,16 @@ else:
 
                     image_name = get_image_name(meal_name)
 
-                    homemade_path = (
-                        HOMEMADE_DIR /
-                        f"{image_name}_hm.jpeg"
-                    )
+                    homemade_path = HOMEMADE_DIR / f"{image_name}_hm.jpeg"
 
-                    restaurant_path = (
-                        RESTAURANT_DIR /
-                        f"{image_name}_r.jpeg"
-                    )
+                    restaurant_path = RESTAURANT_DIR / f"{image_name}_r.jpeg"
+
+                    ingredients_path = INGREDIENTS_DIR / f"{image_name}_i.jpeg"
 
                     show_recipe_images(
                         homemade_path,
-                        restaurant_path
+                        restaurant_path,
+                        ingredients_path
                     )
 
                     # ----------------------------------
