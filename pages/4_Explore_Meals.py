@@ -2,10 +2,7 @@
 import streamlit as st
 import pandas as pd
 from pathlib import Path
-import streamlit.components.v1 as components
-import base64
 import re
-import mimetypes
 
 
 # --------------------------------------------------
@@ -75,29 +72,93 @@ def get_image_name(meal_name):
     return name
 
 
-def encode_image(image_path):
-    """Convert an image into a format that HTML can display."""
+# --------------------------------------------------
+# PHOTO NAVIGATION
+# --------------------------------------------------
 
-    with open(image_path, "rb") as image_file:
-        encoded = base64.b64encode(image_file.read()).decode("utf-8")
+def change_recipe_photo(state_key, direction, photo_count):
+    """Change the selected photo in a recipe card."""
 
-    mime_type = mimetypes.guess_type(str(image_path))[0]
+    current_index = st.session_state.get(state_key, 0)
 
-    if mime_type is None:
-        mime_type = "image/jpeg"
+    st.session_state[state_key] = (
+        current_index + direction
+    ) % photo_count
 
-    return f"data:{mime_type};base64,{encoded}"
+
+def change_large_photo(direction):
+    """Change the photo inside the enlarged photo dialog."""
+
+    image_paths = st.session_state.get("large_photo_paths", [])
+
+    if not image_paths:
+        return
+
+    current_index = st.session_state.get("large_photo_index", 0)
+
+    st.session_state["large_photo_index"] = (
+        current_index + direction
+    ) % len(image_paths)
+
+
+# --------------------------------------------------
+# ENLARGED PHOTO DIALOG
+# --------------------------------------------------
+
+@st.dialog("Enlarged Recipe Photo", width="large")
+def show_large_photo():
+
+    image_paths = st.session_state.get("large_photo_paths", [])
+
+    if not image_paths:
+        st.info("No recipe photos are available.")
+        return
+
+    current_index = st.session_state.get("large_photo_index", 0)
+
+    # Display the enlarged photo.
+
+    st.image(
+        image_paths[current_index],
+        use_container_width=True
+    )
+
+    # Photo navigation.
+
+    if len(image_paths) > 1:
+
+        previous_col, next_col = st.columns(2)
+
+        with previous_col:
+
+            st.button(
+                "← Previous Photo",
+                key="large_photo_previous",
+                use_container_width=True,
+                on_click=change_large_photo,
+                args=(-1,)
+            )
+
+        with next_col:
+
+            st.button(
+                "Next Photo →",
+                key="large_photo_next",
+                use_container_width=True,
+                on_click=change_large_photo,
+                args=(1,)
+            )
 
 
 # --------------------------------------------------
 # RECIPE PHOTO DISPLAY
 # --------------------------------------------------
 
-
 def show_recipe_images(
     homemade_path,
     restaurant_path,
-    ingredients_path
+    ingredients_path,
+    meal_name
 ):
 
     # Collect available photos.
@@ -113,271 +174,72 @@ def show_recipe_images(
     if ingredients_path.exists():
         image_paths.append(ingredients_path)
 
+    # Show a message if no photos exist.
+
     if not image_paths:
         st.info("📷 Recipe photos coming soon.")
         return
 
-    # Display one photo using Streamlit's built-in viewer.
+    # Create a unique session key for each recipe.
 
-    if len(image_paths) == 1:
-        st.image(
-            str(image_paths[0]),
-            use_container_width=True
+    state_key = f"photo_index_{get_image_name(meal_name)}"
+
+    if state_key not in st.session_state:
+        st.session_state[state_key] = 0
+
+    current_index = st.session_state[state_key]
+
+    # Display the selected photo.
+
+    st.image(
+        str(image_paths[current_index]),
+        use_container_width=True
+    )
+
+    # Photo navigation buttons.
+
+    if len(image_paths) > 1:
+
+        previous_col, next_col = st.columns(2)
+
+        with previous_col:
+
+            st.button(
+                "← Previous",
+                key=f"{state_key}_previous",
+                use_container_width=True,
+                on_click=change_recipe_photo,
+                args=(state_key, -1, len(image_paths))
+            )
+
+        with next_col:
+
+            st.button(
+                "Next →",
+                key=f"{state_key}_next",
+                use_container_width=True,
+                on_click=change_recipe_photo,
+                args=(state_key, 1, len(image_paths))
+            )
+
+    # Open the enlarged photo dialog.
+
+    if st.button(
+        "🔍 View Larger Photo",
+        key=f"{state_key}_enlarge",
+        use_container_width=True
+    ):
+
+        st.session_state["large_photo_paths"] = [
+            str(path) for path in image_paths
+        ]
+
+        st.session_state["large_photo_index"] = (
+            st.session_state[state_key]
         )
-        return
 
-    # Convert photos for the HTML viewer.
+        show_large_photo()
 
-    images = [
-        encode_image(image_path)
-        for image_path in image_paths
-    ]
-
-    image_sources = ", ".join(
-        f'"{image}"' for image in images
-    )
-
-    html = f"""
-    <!DOCTYPE html>
-    <html>
-
-    <head>
-
-        <style>
-
-            * {{
-                box-sizing: border-box;
-            }}
-
-            body {{
-                margin: 0;
-                padding: 0;
-                font-family: Arial, sans-serif;
-            }}
-
-            .photo-container {{
-                position: relative;
-                width: 100%;
-                height: 150px;
-                overflow: hidden;
-                border-radius: 8px;
-                background: #eeeeee;
-                cursor: zoom-in;
-            }}
-
-            .recipe-photo {{
-                width: 100%;
-                height: 150px;
-                object-fit: cover;
-                display: block;
-            }}
-
-            .arrow {{
-                position: absolute;
-                top: 50%;
-                transform: translateY(-50%);
-                border: none;
-                border-radius: 50%;
-                width: 30px;
-                height: 30px;
-                background: rgba(0, 0, 0, 0.65);
-                color: white;
-                font-size: 20px;
-                cursor: pointer;
-                opacity: 0;
-                transition: opacity 0.2s;
-                z-index: 2;
-            }}
-
-            .photo-container:hover .arrow,
-            .arrow:focus {{
-                opacity: 1;
-            }}
-
-            .left-arrow {{
-                left: 8px;
-            }}
-
-            .right-arrow {{
-                right: 8px;
-            }}
-
-            @media (hover: none) {{
-                .arrow {{
-                    opacity: 1;
-                }}
-            }}
-
-            /* Enlarged image overlay */
-
-            .image-overlay {{
-                display: none;
-                position: fixed;
-                inset: 0;
-                width: 100vw;
-                height: 100vh;
-                background: rgba(0, 0, 0, 0.92);
-                z-index: 999999;
-                align-items: center;
-                justify-content: center;
-                cursor: zoom-out;
-            }}
-
-            .image-overlay.active {{
-                display: flex;
-            }}
-
-            .large-image {{
-                max-width: 90%;
-                max-height: 85%;
-                object-fit: contain;
-                cursor: default;
-                border-radius: 6px;
-            }}
-
-            .close-button {{
-                position: absolute;
-                top: 20px;
-                right: 25px;
-                border: none;
-                background: transparent;
-                color: white;
-                font-size: 38px;
-                cursor: pointer;
-                z-index: 1000000;
-            }}
-
-            .close-button:hover {{
-                color: #cccccc;
-            }}
-
-        </style>
-
-    </head>
-
-    <body>
-
-        <!-- Recipe photo -->
-
-        <div
-            class="photo-container"
-            onclick="openLargeImage()"
-            title="Click to enlarge photo"
-        >
-
-            <img
-                id="recipe-photo"
-                class="recipe-photo"
-                src="{images[0]}"
-            >
-
-            <button
-                class="arrow left-arrow"
-                onclick="changePhoto(-1, event)"
-            >
-                &#8249;
-            </button>
-
-            <button
-                class="arrow right-arrow"
-                onclick="changePhoto(1, event)"
-            >
-                &#8250;
-            </button>
-
-        </div>
-
-
-        <!-- Enlarged photo overlay -->
-
-        <div
-            id="image-overlay"
-            class="image-overlay"
-            onclick="closeLargeImage()"
-        >
-
-            <button
-                class="close-button"
-                onclick="closeLargeImage(event)"
-                aria-label="Close enlarged image"
-            >
-                &times;
-            </button>
-
-            <img
-                id="large-image"
-                class="large-image"
-                src="{images[0]}"
-                onclick="event.stopPropagation()"
-            >
-
-        </div>
-
-
-        <script>
-
-            const imageSources = [{image_sources}];
-
-            let currentPhoto = 0;
-
-            function changePhoto(direction, event) {{
-
-                event.stopPropagation();
-
-                currentPhoto = (
-                    currentPhoto + direction + imageSources.length
-                ) % imageSources.length;
-
-                document.getElementById("recipe-photo").src =
-                    imageSources[currentPhoto];
-
-                document.getElementById("large-image").src =
-                    imageSources[currentPhoto];
-
-            }}
-
-            function openLargeImage() {{
-
-                const overlay = document.getElementById("image-overlay");
-
-                document.getElementById("large-image").src =
-                    imageSources[currentPhoto];
-
-                overlay.classList.add("active");
-
-            }}
-
-            function closeLargeImage(event) {{
-
-                if (event) {{
-                    event.stopPropagation();
-                }}
-
-                document.getElementById("image-overlay")
-                    .classList.remove("active");
-
-            }}
-
-            document.addEventListener("keydown", function(event) {{
-
-                if (event.key === "Escape") {{
-                    closeLargeImage();
-                }}
-
-            }});
-
-        </script>
-
-    </body>
-
-    </html>
-    """
-
-    components.html(
-        html,
-        height=155,
-        scrolling=False
-    )
 
 # --------------------------------------------------
 # SEARCH MEALS
@@ -472,7 +334,8 @@ else:
                     show_recipe_images(
                         homemade_path,
                         restaurant_path,
-                        ingredients_path
+                        ingredients_path,
+                        meal_name
                     )
 
                     st.write(
