@@ -162,7 +162,7 @@ def show_large_photo():
     st.image(
         image_paths[selected_photo],
         use_container_width=False,
-        width=1200
+        width=800
     )
 
     # Display photo category
