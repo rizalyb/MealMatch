@@ -161,7 +161,8 @@ def show_large_photo():
     # Display the current photo
     st.image(
         image_paths[selected_photo],
-        use_container_width=True
+        use_container_width=False,
+        width=550
     )
 
     # Display photo category
