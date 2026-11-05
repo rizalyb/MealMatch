@@ -1,7 +1,13 @@
+
 import streamlit as st
 import pandas as pd
 from pathlib import Path
 import re
+import base64
+import mimetypes
+import json
+import streamlit.components.v1 as components
+
 
 # --------------------------------------------------
 # PAGE SETUP
@@ -19,6 +25,7 @@ st.write("Browse recipes, compare costs, and find meals that fit your preference
 
 st.divider()
 
+
 # --------------------------------------------------
 # LOAD MEAL DATA
 # --------------------------------------------------
@@ -35,6 +42,7 @@ if meals is None or ingredients is None:
 
 meals = meals.copy()
 ingredients = ingredients.copy()
+
 
 # --------------------------------------------------
 # HELPER FUNCTIONS
@@ -67,33 +75,177 @@ def get_image_name(meal_name):
 
     return name
 
+
+def encode_image(image_path):
+    """Convert an image into a format the HTML viewer can display."""
+
+    image_path = Path(image_path)
+
+    mime_type, _ = mimetypes.guess_type(str(image_path))
+
+    if mime_type is None:
+        mime_type = "image/jpeg"
+
+    with open(image_path, "rb") as image_file:
+        encoded = base64.b64encode(image_file.read()).decode("utf-8")
+
+    return f"data:{mime_type};base64,{encoded}"
+
+
 # --------------------------------------------------
-# PHOTO NAVIGATION
+# HTML PHOTO CAROUSEL
 # --------------------------------------------------
 
-def change_recipe_photo(state_key, direction, photo_count):
-    """Change the selected photo in a recipe card."""
+def build_photo_viewer(image_paths, viewer_height=200):
 
-    current_index = st.session_state.get(state_key, 0)
+    encoded_images = [
+        encode_image(path) for path in image_paths
+    ]
 
-    st.session_state[state_key] = (
-        current_index + direction
-    ) % photo_count
+    images_json = json.dumps(encoded_images)
 
+    html_template = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            * {
+                box-sizing: border-box;
+            }
 
-def change_large_photo(direction):
-    """Change the photo inside the enlarged photo dialog."""
+            body {
+                margin: 0;
+                padding: 0;
+                font-family: sans-serif;
+                background: transparent;
+            }
 
-    image_paths = st.session_state.get("large_photo_paths", [])
+            .photo-viewer {
+                width: 100%;
+                height: __HEIGHT__px;
+                position: relative;
+                overflow: hidden;
+                border-radius: 10px;
+                background: transparent;
+            }
 
-    if not image_paths:
-        return
+            .photo-viewer img {
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+                display: block;
+            }
 
-    current_index = st.session_state.get("large_photo_index", 0)
+            .photo-arrow {
+                position: absolute;
+                top: 50%;
+                transform: translateY(-50%);
+                width: 38px;
+                height: 38px;
+                border: none;
+                border-radius: 50%;
+                background: rgba(0, 0, 0, 0.58);
+                color: white;
+                font-size: 27px;
+                line-height: 1;
+                cursor: pointer;
+                opacity: 0;
+                transition: opacity 0.2s ease;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 0;
+            }
 
-    st.session_state["large_photo_index"] = (
-        current_index + direction
-    ) % len(image_paths)
+            .photo-viewer:hover .photo-arrow {
+                opacity: 1;
+            }
+
+            .photo-arrow:hover {
+                background: rgba(0, 0, 0, 0.85);
+            }
+
+            .photo-arrow.left {
+                left: 10px;
+            }
+
+            .photo-arrow.right {
+                right: 10px;
+            }
+
+            .photo-arrow.hidden {
+                display: none;
+            }
+        </style>
+    </head>
+
+    <body>
+
+        <div class="photo-viewer">
+
+            <img id="recipe-photo" src="" alt="Recipe photo">
+
+            <button
+                class="photo-arrow left"
+                id="previous-photo"
+                aria-label="Previous photo"
+                onclick="changePhoto(-1)">
+                &#8249;
+            </button>
+
+            <button
+                class="photo-arrow right"
+                id="next-photo"
+                aria-label="Next photo"
+                onclick="changePhoto(1)">
+                &#8250;
+            </button>
+
+        </div>
+
+        <script>
+            const images = __IMAGES__;
+
+            let currentIndex = 0;
+
+            const photo = document.getElementById("recipe-photo");
+            const previousButton = document.getElementById("previous-photo");
+            const nextButton = document.getElementById("next-photo");
+
+            function displayPhoto() {
+
+                photo.src = images[currentIndex];
+
+                if (images.length <= 1) {
+                    previousButton.classList.add("hidden");
+                    nextButton.classList.add("hidden");
+                }
+            }
+
+            function changePhoto(direction) {
+
+                currentIndex =
+                    (currentIndex + direction + images.length)
+                    % images.length;
+
+                displayPhoto();
+            }
+
+            displayPhoto();
+        </script>
+
+    </body>
+    </html>
+    """
+
+    html_code = (
+        html_template
+        .replace("__HEIGHT__", str(viewer_height))
+        .replace("__IMAGES__", images_json)
+    )
+
+    return html_code
+
 
 # --------------------------------------------------
 # ENLARGED PHOTO DIALOG
@@ -108,42 +260,17 @@ def show_large_photo():
         st.info("No recipe photos are available.")
         return
 
-    current_index = st.session_state.get("large_photo_index", 0)
+    html_code = build_photo_viewer(
+        image_paths,
+        viewer_height=580
+    )
 
-    if len(image_paths) > 1:
+    components.html(
+        html_code,
+        height=590,
+        scrolling=False
+    )
 
-        left_col, image_col, right_col = st.columns([1, 10, 1])
-
-        with left_col:
-            st.button(
-                "‹",
-                key="large_photo_previous",
-                help="Previous photo",
-                on_click=change_large_photo,
-                args=(-1,)
-            )
-
-        with image_col:
-            st.image(
-                image_paths[current_index],
-                use_container_width=True
-            )
-
-        with right_col:
-            st.button(
-                "›",
-                key="large_photo_next",
-                help="Next photo",
-                on_click=change_large_photo,
-                args=(1,)
-            )
-
-    else:
-
-        st.image(
-            image_paths[current_index],
-            use_container_width=True
-        )
 
 # --------------------------------------------------
 # RECIPE PHOTO DISPLAY
@@ -175,61 +302,28 @@ def show_recipe_images(
         st.info("📷 Recipe photos coming soon.")
         return
 
-    # Create a unique session key for each recipe.
+    # Display the HTML photo carousel.
 
-    state_key = f"photo_index_{get_image_name(meal_name)}"
+    html_code = build_photo_viewer(
+        image_paths,
+        viewer_height=190
+    )
 
-    if state_key not in st.session_state:
-        st.session_state[state_key] = 0
+    components.html(
+        html_code,
+        height=195,
+        scrolling=False
+    )
 
-    current_index = st.session_state[state_key]
+    # Small expand icon.
 
-    # Display the photo with arrow controls.
-
-    if len(image_paths) > 1:
-
-        left_col, image_col, right_col = st.columns([1, 10, 1])
-
-        with left_col:
-            st.button(
-                "‹",
-                key=f"{state_key}_previous",
-                help="Previous photo",
-                on_click=change_recipe_photo,
-                args=(state_key, -1, len(image_paths))
-            )
-
-        with image_col:
-            st.image(
-                str(image_paths[current_index]),
-                use_container_width=True
-            )
-
-        with right_col:
-            st.button(
-                "›",
-                key=f"{state_key}_next",
-                help="Next photo",
-                on_click=change_recipe_photo,
-                args=(state_key, 1, len(image_paths))
-            )
-
-    else:
-
-        st.image(
-            str(image_paths[current_index]),
-            use_container_width=True
-        )
-
-    # Small expand button.
-
-    expand_col1, expand_col2, expand_col3 = st.columns([1, 10, 1])
+    expand_col1, expand_col2 = st.columns([10, 1])
 
     with expand_col2:
 
         if st.button(
             "⛶",
-            key=f"{state_key}_enlarge",
+            key=f"enlarge_{get_image_name(meal_name)}",
             help="Enlarge photo"
         ):
 
@@ -237,11 +331,8 @@ def show_recipe_images(
                 str(path) for path in image_paths
             ]
 
-            st.session_state["large_photo_index"] = (
-                st.session_state[state_key]
-            )
-
             show_large_photo()
+
 
 # --------------------------------------------------
 # SEARCH MEALS
@@ -287,6 +378,7 @@ if search_query.strip():
 st.write(f"Showing {len(filtered_meals)} recipes.")
 
 st.divider()
+
 
 # --------------------------------------------------
 # DISPLAY RECIPE CARDS
