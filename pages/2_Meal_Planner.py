@@ -13,7 +13,20 @@ INGREDIENTS_DIR = APP_DIR / "images" / "ingredients"
 
 # LOAD SHARED DATA AND PREFERENCES
 
-@@ -23,383 +31,426 @@
+meals = st.session_state["meals"]
+ingredients = st.session_state["ingredients"]
+
+budget = st.session_state["budget"]
+weekly_budget = st.session_state["weekly_budget"]
+use_weekly_budget = st.session_state["use_weekly_budget"]
+
+max_time = st.session_state["max_time"]
+desired_servings = st.session_state["desired_servings"]
+plan_days = st.session_state["plan_days"]
+
+dietary_restrictions = st.session_state["dietary_restrictions"]
+food_preferences = st.session_state["food_preferences"]
+
 max_calories = st.session_state["max_calories"]
 min_protein = st.session_state["min_protein"]
 
