@@ -178,7 +178,7 @@ def show_large_photo():
     st.image(
         image_paths[selected_photo],
         use_container_width=False,
-        width=400
+        width=800
     )
 
     # Identify photo category
@@ -277,6 +277,7 @@ def show_recipe_images(meal_name, unique_id):
             st.image(
                 image_paths[current_index],
                 use_container_width=True
+                width=500
             )
 
         # Previous photo arrow
