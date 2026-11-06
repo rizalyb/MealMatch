@@ -69,21 +69,21 @@ st.markdown(
 
     /* Left arrow */
     div[class*="st-key-photo_prev_"] {
-        left: 15%;
+        left: 35%;
         top: 50%;
         transform: translateY(-50%);
     }
 
     /* Right arrow */
     div[class*="st-key-photo_next_"] {
-        right: 15%;
+        right: 35%;
         top: 50%;
         transform: translateY(-50%);
     }
 
     /* Expand icon */
     div[class*="st-key-photo_expand_"] {
-        right: 15%;
+        right: 35%;
         bottom: 8px;
     }
 
