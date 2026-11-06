@@ -695,51 +695,57 @@ for index, meal in meal_plan.iterrows():
 
     with st.expander("View Meal Details", expanded=True):
 
+        # Meal cost and serving information
         col1, col2, col3 = st.columns(3)
-
+        
         with col1:
-
             st.metric(
                 "Estimated Cost",
                 f"${meal['Adjusted Cost']:.2f}"
             )
-
+        
         with col2:
-
+            package_price = meal["Walmart Package Price Number"]
+        
+            st.metric(
+                "Walmart Package Price",
+                (
+                    f"${package_price:.2f}"
+                    if pd.notna(package_price)
+                    else "N/A"
+                )
+            )
+        
+        with col3:
             st.metric(
                 "Cooking Time",
                 f"{meal['Time Number']:.0f} min"
             )
-
-        with col3:
-
+        
+        col4, col5 = st.columns(2)
+        
+        with col4:
             st.metric(
                 "Servings",
                 desired_servings
             )
-
-        col4, col5 = st.columns(2)
-
-        with col4:
-
+        
+        with col5:
             st.metric(
                 "Calories",
                 f"{meal['Adjusted Calories']:.0f}"
             )
-
-        with col5:
-
-            st.metric(
-                "Protein",
-                f"{meal['Adjusted Protein']:.1f} g"
-            )
-
+        
+        st.metric(
+            "Protein",
+            f"{meal['Adjusted Protein']:.1f} g"
+        )
+        
         st.write("Dietary Type:", meal["Dietary Type"])
-
+        
         st.write("Cooking Instructions:")
-
+        
         st.write(meal["Cooking Instructions"])
-
 
         # ALTERNATIVE MEALS
 
@@ -809,42 +815,46 @@ st.subheader("💰 Meal Plan Summary")
 
 total_cost = meal_plan["Adjusted Cost"].sum()
 
-total_walmart_package_price = (
-    meal_plan["Walmart Package Price Number"].sum(min_count=1)
-)
-
-col1, col2, col3 = st.columns(3)
+col1, col2 = st.columns(2)
 
 with col1:
-
     st.metric(
         "Total Estimated Cost",
         f"${total_cost:.2f}"
     )
 
 with col2:
-
-    if pd.notna(total_walmart_package_price):
-
-        st.metric(
-            "Total Walmart Package Price",
-            f"${total_walmart_package_price:.2f}"
-        )
-
-    else:
-
-        st.metric(
-            "Total Walmart Package Price",
-            "N/A"
-        )
-
-with col3:
-
     st.metric(
         "Planned Meals",
         len(meal_plan)
     )
 
+
+# --------------------------------------------------
+# WEEKLY BUDGET CHECK
+# --------------------------------------------------
+
+if use_weekly_budget:
+
+    if total_cost <= weekly_budget:
+
+        st.success(
+            f"Your meal plan is within your "
+            f"${weekly_budget:.2f} weekly budget."
+        )
+
+    else:
+
+        st.warning(
+            f"Your meal plan exceeds your weekly budget "
+            f"by ${total_cost - weekly_budget:.2f}."
+        )
+
+
+st.caption(
+    "Total Estimated Cost reflects the ingredient amounts "
+    "used for your selected serving sizes."
+)
 
 # --------------------------------------------------
 # WEEKLY BUDGET CHECK
