@@ -1,3 +1,4 @@
+from pathlib import Path
 import streamlit as st
 import pandas as pd
 import re
@@ -10,6 +11,203 @@ APP_DIR = Path(__file__).resolve().parent.parent
 HOMEMADE_DIR = APP_DIR / "images" / "homemade"
 RESTAURANT_DIR = APP_DIR / "images" / "restaurant"
 INGREDIENTS_DIR = APP_DIR / "images" / "ingredients"
+
+# FIND PHOTOS FOR EACH MEAL
+
+def get_meal_photo_paths(meal_name):
+
+    image_name = str(meal_name).lower().strip()
+    image_name = re.sub(r"[^a-z0-9]+", "_", image_name)
+    image_name = image_name.strip("_")
+
+    photo_locations = [
+        (HOMEMADE_DIR, "_hm"),
+        (RESTAURANT_DIR, "_r"),
+        (INGREDIENTS_DIR, "_i")
+    ]
+
+    image_paths = []
+
+    for folder, suffix in photo_locations:
+
+        for extension in [".jpeg", ".jpg", ".png"]:
+
+            photo_path = folder / f"{image_name}{suffix}{extension}"
+
+            if photo_path.exists():
+                image_paths.append(photo_path)
+                break
+
+    return image_paths
+
+
+# PHOTO CATEGORY LABEL
+
+def get_photo_category(photo_path):
+
+    name = Path(photo_path).stem
+
+    if name.endswith("_hm"):
+        return "Homemade"
+
+    elif name.endswith("_r"):
+        return "Restaurant"
+
+    elif name.endswith("_i"):
+        return "Ingredients"
+
+    return "Recipe Photo"
+
+
+# ENLARGED PHOTO DIALOG
+
+@st.dialog("Meal Photos", width="large")
+def show_meal_photo_dialog():
+
+    image_paths = st.session_state.get(
+        "meal_photo_dialog_paths", []
+    )
+
+    if not image_paths:
+        st.info("No photos are available.")
+        return
+
+    selected_photo = st.session_state.get(
+        "meal_photo_dialog_index", 0
+    )
+
+    selected_photo %= len(image_paths)
+
+    st.image(
+        image_paths[selected_photo],
+        width=850
+    )
+
+    photo_label = get_photo_category(
+        image_paths[selected_photo]
+    )
+
+    st.caption(
+        f"{photo_label} Photo "
+        f"({selected_photo + 1} of {len(image_paths)})"
+    )
+
+    if len(image_paths) > 1:
+
+        previous_col, next_col = st.columns(2)
+
+        with previous_col:
+
+            if st.button(
+                "← Previous",
+                use_container_width=True,
+                key="meal_dialog_previous"
+            ):
+
+                st.session_state["meal_photo_dialog_index"] = (
+                    selected_photo - 1
+                ) % len(image_paths)
+
+                st.rerun(scope="fragment")
+
+        with next_col:
+
+            if st.button(
+                "Next →",
+                use_container_width=True,
+                key="meal_dialog_next"
+            ):
+
+                st.session_state["meal_photo_dialog_index"] = (
+                    selected_photo + 1
+                ) % len(image_paths)
+
+                st.rerun(scope="fragment")
+
+
+# REGULAR MEAL PHOTO CAROUSEL
+
+def show_meal_photo_carousel(meal_name, meal_index):
+
+    image_paths = get_meal_photo_paths(meal_name)
+
+    if not image_paths:
+        st.caption("📷 Recipe photo coming soon.")
+        return False
+
+    image_name = re.sub(
+        r"[^a-z0-9]+",
+        "_",
+        str(meal_name).lower().strip()
+    ).strip("_")
+
+    photo_key = f"meal_photo_index_{image_name}_{meal_index}"
+
+    if photo_key not in st.session_state:
+        st.session_state[photo_key] = 0
+
+    current_index = (
+        st.session_state[photo_key] % len(image_paths)
+    )
+
+    viewer_key = f"meal_photo_viewer_{image_name}_{meal_index}"
+
+    with st.container(key=viewer_key):
+
+        # Center the photo
+        _, image_col, _ = st.columns([0.35, 2.3, 0.35])
+
+        with image_col:
+
+            st.image(
+                str(image_paths[current_index]),
+                use_container_width=True
+            )
+
+        # Previous arrow
+        if len(image_paths) > 1:
+
+            if st.button(
+                "‹",
+                key=f"meal_photo_prev_{image_name}_{meal_index}"
+            ):
+
+                st.session_state[photo_key] = (
+                    current_index - 1
+                ) % len(image_paths)
+
+                st.rerun()
+
+            # Next arrow
+            if st.button(
+                "›",
+                key=f"meal_photo_next_{image_name}_{meal_index}"
+            ):
+
+                st.session_state[photo_key] = (
+                    current_index + 1
+                ) % len(image_paths)
+
+                st.rerun()
+
+        # Expand button
+        if st.button(
+            "⛶",
+            key=f"meal_photo_expand_{image_name}_{meal_index}"
+        ):
+
+            st.session_state["meal_photo_dialog_paths"] = [
+                str(path) for path in image_paths
+            ]
+
+            st.session_state["meal_photo_dialog_index"] = (
+                current_index
+            )
+
+            return True
+
+    return False
+
 
 # LOAD SHARED DATA AND PREFERENCES
 
@@ -288,6 +486,74 @@ meal_plan["Adjusted Protein"] = (
 
 
 # DISPLAY WEEKLY MEAL PLAN
+<style>
+
+/* Position photo controls over the image */
+div[class*="st-key-meal_photo_viewer_"] {
+    position: relative;
+}
+
+/* Hide controls until the photo is hovered */
+div[class*="st-key-meal_photo_prev_"],
+div[class*="st-key-meal_photo_next_"],
+div[class*="st-key-meal_photo_expand_"] {
+    position: absolute !important;
+    z-index: 10;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+/* Show controls on hover */
+div[class*="st-key-meal_photo_viewer_"]:hover
+div[class*="st-key-meal_photo_prev_"],
+div[class*="st-key-meal_photo_viewer_"]:hover
+div[class*="st-key-meal_photo_next_"],
+div[class*="st-key-meal_photo_viewer_"]:hover
+div[class*="st-key-meal_photo_expand_"] {
+    opacity: 1;
+}
+
+/* Left arrow */
+div[class*="st-key-meal_photo_prev_"] {
+    left: 13%;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* Right arrow */
+div[class*="st-key-meal_photo_next_"] {
+    right: 13%;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* Expand button */
+div[class*="st-key-meal_photo_expand_"] {
+    right: 13%;
+    bottom: 8px;
+}
+
+/* Button appearance */
+div[class*="st-key-meal_photo_prev_"] button,
+div[class*="st-key-meal_photo_next_"] button,
+div[class*="st-key-meal_photo_expand_"] button {
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 0.65);
+    color: white;
+    border: none;
+    min-width: 38px;
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    font-size: 22px;
+}
+
+/* Hide Streamlit's separate image toolbar */
+div[data-testid="stImage"] [data-testid="stElementToolbar"] {
+    display: none !important;
+}
+
+</style>
 
 st.divider()
 
@@ -301,6 +567,18 @@ st.caption(
 for index, meal in meal_plan.iterrows():
 
     st.subheader(f"Day {index + 1}: {meal['Meal Name']}")
+
+    # DISPLAY MEAL PHOTO CAROUSEL
+
+    open_photo_dialog = show_meal_photo_carousel(
+        meal["Meal Name"],
+        index
+    )
+
+    if open_photo_dialog:
+        show_meal_photo_dialog()
+
+    with st.expander("View Meal Details", expanded=True):
 
     # DISPLAY MEAL PHOTO
 
