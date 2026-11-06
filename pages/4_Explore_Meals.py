@@ -410,14 +410,14 @@ else:
                     # Display meal information
                     st.write(
                         f"**Estimated Ingredient Cost:** "
-                        f"${ingredient_cost}"
+                        f"{ingredient_cost}"
                         if ingredient_cost != "Not available"
                         else "**Estimated Ingredient Cost:** Not available"
                     )
 
                     st.write(
                         f"**Walmart Package Price:** "
-                        f"${walmart_package_price}"
+                        f"{walmart_package_price}"
                         if walmart_package_price != "Not available"
                         else "**Walmart Package Price:** Not available"
                     )
