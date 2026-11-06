@@ -1,7 +1,15 @@
 import streamlit as st
 import pandas as pd
 import re
+from pathlib import Path
 
+# IMAGE FOLDERS
+
+APP_DIR = Path(__file__).resolve().parent.parent
+
+HOMEMADE_DIR = APP_DIR / "images" / "homemade"
+RESTAURANT_DIR = APP_DIR / "images" / "restaurant"
+INGREDIENTS_DIR = APP_DIR / "images" / "ingredients"
 
 # LOAD SHARED DATA AND PREFERENCES
 
@@ -23,6 +31,32 @@ food_preferences = st.session_state["food_preferences"]
 max_calories = st.session_state["max_calories"]
 min_protein = st.session_state["min_protein"]
 
+# FIND MEAL PHOTOS
+
+def get_meal_photo(meal_name):
+
+    image_name = str(meal_name).lower().strip()
+    image_name = re.sub(r"[^a-z0-9]+", "_", image_name)
+    image_name = image_name.strip("_")
+
+    photo_locations = [
+        (HOMEMADE_DIR, "_hm"),
+        (RESTAURANT_DIR, "_r"),
+        (INGREDIENTS_DIR, "_i")
+    ]
+
+    for folder, suffix in photo_locations:
+
+        for extension in [".jpeg", ".jpg", ".png"]:
+
+            photo_path = (
+                folder / f"{image_name}{suffix}{extension}"
+            )
+
+            if photo_path.exists():
+                return photo_path
+
+    return None
 
 # PAGE TITLE
 
@@ -267,6 +301,23 @@ st.caption(
 for index, meal in meal_plan.iterrows():
 
     st.subheader(f"Day {index + 1}: {meal['Meal Name']}")
+
+    # DISPLAY MEAL PHOTO
+
+    meal_photo = get_meal_photo(meal["Meal Name"])
+
+    if meal_photo:
+
+        photo_left, photo_center, photo_right = st.columns([1, 2, 1])
+
+        with photo_center:
+            st.image(
+                str(meal_photo),
+                width=420
+            )
+
+    else:
+        st.caption("📷 Recipe photo coming soon.")
 
     with st.expander("View Meal Details", expanded=True):
 
