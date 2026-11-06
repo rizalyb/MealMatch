@@ -450,13 +450,27 @@ else:
                                     "Ingredients",
                                     "Quantity",
                                     "Unit",
-                                    "Estimated Cost"
+                                    "Estimated Cost",
+                                    "Price",
+                                    "Package Quantity",
+                                    "Package Unit"
                                 ]
                                 if name in meal_ingredients.columns
                             ]
 
+                            # Rename columns to make the prices easier to understand
+                            display_names = {
+                                "Estimated Cost": "Recipe Cost",
+                                "Price": "Walmart Package Price",
+                                "Package Quantity": "Package Size"
+                            }
+                            
+                            display_data = meal_ingredients[display_columns].rename(
+                                columns=display_names
+                            )
+                            
                             st.dataframe(
-                                meal_ingredients[display_columns],
+                                display_data,
                                 hide_index=True,
                                 use_container_width=True
                             )
