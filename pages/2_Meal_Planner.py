@@ -418,6 +418,8 @@ filtered_meals["Protein Number"] = pd.to_numeric(
     errors="coerce"
 )
 
+st.write("Meals CSV columns:", meals.columns.tolist())
+st.write("Ingredients CSV columns:", ingredients.columns.tolist())
 
 # --------------------------------------------------
 # FILTER BY BUDGET
@@ -599,6 +601,8 @@ if (
 
 meal_plan = st.session_state.meal_plan.copy()
 
+if "Walmart Package Price Number" not in meal_plan.columns:
+    meal_plan["Walmart Package Price Number"] = pd.NA
 
 # --------------------------------------------------
 # CALCULATE SERVING ADJUSTMENTS
