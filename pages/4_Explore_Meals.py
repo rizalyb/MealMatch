@@ -423,8 +423,7 @@ else:
                     )
 
                     st.write(
-                        f"**Total Time:** "
-                        f"{total_time} min"
+                        f"**Total Time:** {total_time}"
                         if total_time != "Not available"
                         else "**Total Time:** Not available"
                     )
