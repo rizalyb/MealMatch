@@ -248,7 +248,6 @@ def show_recipe_images(meal_name, unique_id):
     image_paths = get_meal_photo_paths(meal_name)
 
     if not image_paths:
-
         st.caption("📷 Recipe photos coming soon.")
         return False
 
@@ -260,6 +259,7 @@ def show_recipe_images(meal_name, unique_id):
     if photo_key not in st.session_state:
         st.session_state[photo_key] = 0
 
+    # Get the current photo index
     current_index = (
         st.session_state[photo_key] % len(image_paths)
     )
@@ -274,11 +274,9 @@ def show_recipe_images(meal_name, unique_id):
         _, image_col, _ = st.columns([0.35, 2.3, 0.35])
 
         with image_col:
-
             st.image(
-                image_paths[st.session_state[viewer_key]],
-                use_container_width=True,
-                width=500
+                image_paths[current_index],
+                use_container_width=True
             )
 
         # Previous photo arrow
