@@ -344,6 +344,53 @@ st.divider()
 
 filtered_meals = meals.copy()
 
+# --------------------------------------------------
+# GET WALMART PACKAGE PRICE TOTALS
+# --------------------------------------------------
+
+if "Price Total" in meals.columns:
+
+    # Use the Price Total column if it exists in the Meals CSV
+    filtered_meals["Walmart Package Price Number"] = pd.to_numeric(
+        filtered_meals["Price Total"]
+        .astype(str)
+        .str.replace("$", "", regex=False)
+        .str.replace(",", "", regex=False),
+        errors="coerce"
+    )
+
+elif "Price Total" in ingredients.columns:
+
+    # Get the package price total for each meal from the Ingredients CSV
+    price_data = ingredients.copy()
+
+    price_data["Price Total Number"] = pd.to_numeric(
+        price_data["Price Total"]
+        .astype(str)
+        .str.replace("$", "", regex=False)
+        .str.replace(",", "", regex=False),
+        errors="coerce"
+    )
+
+    price_by_meal = (
+        price_data.groupby(
+            price_data["Meal Name"].astype(str).str.strip().str.lower()
+        )["Price Total Number"]
+        .first()
+    )
+
+    filtered_meals["Walmart Package Price Number"] = (
+        filtered_meals["Meal Name"]
+        .astype(str)
+        .str.strip()
+        .str.lower()
+        .map(price_by_meal)
+    )
+
+else:
+
+    filtered_meals["Walmart Package Price Number"] = float("nan")
+
 filtered_meals["Cost Number"] = pd.to_numeric(
     filtered_meals["Ingredient Cost"]
     .astype(str)
@@ -718,7 +765,36 @@ st.subheader("💰 Meal Plan Summary")
 
 total_cost = meal_plan["Adjusted Cost"].sum()
 
-col1, col2 = st.columns(2)
+total_walmart_package_price = (
+    meal_plan["Walmart Package Price Number"].sum(min_count=1)
+)
+
+col1, col2, col3 = st.columns(3)
+
+with col1:
+
+    st.metric(
+        "Total Estimated Cost",
+        f"${total_cost:.2f}"
+    )
+
+with col2:
+
+    st.metric(
+        "Total Walmart Package Price",
+        (
+            f"${total_walmart_package_price:.2f}"
+            if pd.notna(total_walmart_package_price)
+            else "N/A"
+        )
+    )
+
+with col3:
+
+    st.metric(
+        "Planned Meals",
+        plan_days
+    )
 
 with col1:
 
@@ -753,6 +829,10 @@ if use_weekly_budget:
 
 
 st.caption(
-    "Estimated costs reflect the ingredients used "
-    "for your selected serving sizes."
+    "Estimated Cost reflects the cost of the ingredient "
+    "amounts used for your selected serving sizes. "
+    "Walmart Package Price reflects the full purchase "
+    "price of the ingredient packages based on the "
+    "Walmart prices recorded in the dataset. "
+    "Actual store prices may vary."
 )
