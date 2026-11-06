@@ -38,6 +38,25 @@ min_protein = st.session_state["min_protein"]
 
 
 # --------------------------------------------------
+# HELPER FUNCTION FOR PRICE CONVERSION
+# --------------------------------------------------
+
+def convert_price(value):
+
+    if pd.isna(value):
+        return float("nan")
+
+    cleaned_value = (
+        str(value)
+        .replace("$", "")
+        .replace(",", "")
+        .strip()
+    )
+
+    return pd.to_numeric(cleaned_value, errors="coerce")
+
+
+# --------------------------------------------------
 # PHOTO HOVER CONTROLS
 # --------------------------------------------------
 
@@ -174,14 +193,12 @@ def show_large_photo():
 
     selected_photo = selected_photo % len(image_paths)
 
-    # Display enlarged photo
     st.image(
         image_paths[selected_photo],
         use_container_width=False,
         width=720
     )
 
-    # Identify photo category
     photo_name = Path(
         image_paths[selected_photo]
     ).stem
@@ -203,7 +220,6 @@ def show_large_photo():
         f"({selected_photo + 1} of {len(image_paths)})"
     )
 
-    # Dialog navigation arrows
     if len(image_paths) > 1:
 
         previous_col, next_col = st.columns(2)
@@ -251,7 +267,6 @@ def show_recipe_images(meal_name, unique_id):
         st.caption("📷 Recipe photos coming soon.")
         return False
 
-    # Unique photo index for each planned meal
     photo_key = (
         f"meal_planner_photo_index_{unique_id}_{image_name}"
     )
@@ -259,7 +274,6 @@ def show_recipe_images(meal_name, unique_id):
     if photo_key not in st.session_state:
         st.session_state[photo_key] = 0
 
-    # Get the current photo index
     current_index = (
         st.session_state[photo_key] % len(image_paths)
     )
@@ -270,7 +284,6 @@ def show_recipe_images(meal_name, unique_id):
 
     with st.container(key=viewer_key):
 
-        # Center the photo and reduce its displayed width
         _, image_col, _ = st.columns([1, 1.5, 1])
 
         with image_col:
@@ -279,7 +292,6 @@ def show_recipe_images(meal_name, unique_id):
                 width=800
             )
 
-        # Previous photo arrow
         if len(image_paths) > 1:
 
             if st.button(
@@ -293,7 +305,6 @@ def show_recipe_images(meal_name, unique_id):
 
                 st.rerun()
 
-            # Next photo arrow
             if st.button(
                 "›",
                 key=f"photo_next_{unique_id}_{image_name}"
@@ -305,7 +316,6 @@ def show_recipe_images(meal_name, unique_id):
 
                 st.rerun()
 
-        # Expand photo button
         if st.button(
             "⛶",
             key=f"photo_expand_{unique_id}_{image_name}"
@@ -344,59 +354,76 @@ st.divider()
 
 filtered_meals = meals.copy()
 
+# Standardize meal names for matching
+filtered_meals["Meal Name Key"] = (
+    filtered_meals["Meal Name"]
+    .astype(str)
+    .str.strip()
+    .str.lower()
+)
+
+ingredients_data = ingredients.copy()
+
+ingredients_data["Meal Name Key"] = (
+    ingredients_data["Meal Name"]
+    .astype(str)
+    .str.strip()
+    .str.lower()
+)
+
+
 # --------------------------------------------------
 # GET WALMART PACKAGE PRICE TOTALS
 # --------------------------------------------------
 
-if "Price Total" in meals.columns:
+# First, use Total Grocery Cost from the Meals CSV.
+# If a meal does not have a value, calculate its
+# package price using the Price Total column
+# in the Ingredients CSV.
 
-    # Use the Price Total column if it exists in the Meals CSV
-    filtered_meals["Walmart Package Price Number"] = pd.to_numeric(
-        filtered_meals["Price Total"]
-        .astype(str)
-        .str.replace("$", "", regex=False)
-        .str.replace(",", "", regex=False),
-        errors="coerce"
-    )
-
-elif "Price Total" in ingredients.columns:
-
-    # Get the package price total for each meal from the Ingredients CSV
-    price_data = ingredients.copy()
-
-    price_data["Price Total Number"] = pd.to_numeric(
-        price_data["Price Total"]
-        .astype(str)
-        .str.replace("$", "", regex=False)
-        .str.replace(",", "", regex=False),
-        errors="coerce"
-    )
-
-    price_by_meal = (
-        price_data.groupby(
-            price_data["Meal Name"].astype(str).str.strip().str.lower()
-        )["Price Total Number"]
-        .first()
-    )
+if "Total Grocery Cost" in filtered_meals.columns:
 
     filtered_meals["Walmart Package Price Number"] = (
-        filtered_meals["Meal Name"]
-        .astype(str)
-        .str.strip()
-        .str.lower()
-        .map(price_by_meal)
+        filtered_meals["Total Grocery Cost"].apply(convert_price)
     )
 
 else:
 
     filtered_meals["Walmart Package Price Number"] = float("nan")
 
-filtered_meals["Cost Number"] = pd.to_numeric(
-    filtered_meals["Ingredient Cost"]
-    .astype(str)
-    .str.replace("$", "", regex=False)
-    .str.replace(",", "", regex=False),
-    errors="coerce"
+
+# Calculate package totals from the Ingredients CSV
+if "Price Total" in ingredients_data.columns:
+
+    ingredients_data["Price Total Number"] = (
+        ingredients_data["Price Total"].apply(convert_price)
+    )
+
+    price_by_meal = (
+        ingredients_data.groupby("Meal Name Key")[
+            "Price Total Number"
+        ].sum(min_count=1)
+    )
+
+    fallback_prices = (
+        filtered_meals["Meal Name Key"]
+        .map(price_by_meal)
+    )
+
+    # Use the Ingredients CSV when the Meals CSV
+    # does not contain a package price for a meal.
+    filtered_meals["Walmart Package Price Number"] = (
+        filtered_meals["Walmart Package Price Number"]
+        .fillna(fallback_prices)
+    )
+
+
+# --------------------------------------------------
+# CONVERT MEAL INFORMATION TO NUMBERS
+# --------------------------------------------------
+
+filtered_meals["Cost Number"] = (
+    filtered_meals["Ingredient Cost"].apply(convert_price)
 )
 
 filtered_meals["Time Number"] = pd.to_numeric(
@@ -418,8 +445,6 @@ filtered_meals["Protein Number"] = pd.to_numeric(
     errors="coerce"
 )
 
-st.write("Meals CSV columns:", meals.columns.tolist())
-st.write("Ingredients CSV columns:", ingredients.columns.tolist())
 
 # --------------------------------------------------
 # FILTER BY BUDGET
@@ -494,14 +519,10 @@ if food_preferences.strip():
 
     def contains_avoided_food(meal_name):
 
-        meal_name = str(meal_name).lower()
+        meal_name = str(meal_name).lower().strip()
 
-        meal_ingredients = ingredients[
-            ingredients["Meal Name"]
-            .astype(str)
-            .str.strip()
-            .str.lower()
-            == meal_name
+        meal_ingredients = ingredients_data[
+            ingredients_data["Meal Name Key"] == meal_name
         ]
 
         ingredient_names = " ".join(
@@ -601,8 +622,27 @@ if (
 
 meal_plan = st.session_state.meal_plan.copy()
 
-if "Walmart Package Price Number" not in meal_plan.columns:
-    meal_plan["Walmart Package Price Number"] = pd.NA
+
+# Refresh the Walmart package prices even when
+# Streamlit reuses an older saved meal plan.
+
+meal_plan["Meal Name Key"] = (
+    meal_plan["Meal Name"]
+    .astype(str)
+    .str.strip()
+    .str.lower()
+)
+
+walmart_price_lookup = (
+    filtered_meals
+    .drop_duplicates("Meal Name Key")
+    .set_index("Meal Name Key")["Walmart Package Price Number"]
+)
+
+meal_plan["Walmart Package Price Number"] = (
+    meal_plan["Meal Name Key"].map(walmart_price_lookup)
+)
+
 
 # --------------------------------------------------
 # CALCULATE SERVING ADJUSTMENTS
@@ -784,36 +824,31 @@ with col1:
 
 with col2:
 
-    st.metric(
-        "Total Walmart Package Price",
-        (
+    if pd.notna(total_walmart_package_price):
+
+        st.metric(
+            "Total Walmart Package Price",
             f"${total_walmart_package_price:.2f}"
-            if pd.notna(total_walmart_package_price)
-            else "N/A"
         )
-    )
+
+    else:
+
+        st.metric(
+            "Total Walmart Package Price",
+            "N/A"
+        )
 
 with col3:
 
     st.metric(
         "Planned Meals",
-        plan_days
+        len(meal_plan)
     )
 
-with col1:
 
-    st.metric(
-        "Total Estimated Cost",
-        f"${total_cost:.2f}"
-    )
-
-with col2:
-
-    st.metric(
-        "Planned Meals",
-        plan_days
-    )
-
+# --------------------------------------------------
+# WEEKLY BUDGET CHECK
+# --------------------------------------------------
 
 if use_weekly_budget:
 
@@ -832,11 +867,16 @@ if use_weekly_budget:
         )
 
 
+# --------------------------------------------------
+# SUMMARY EXPLANATION
+# --------------------------------------------------
+
 st.caption(
-    "Estimated Cost reflects the cost of the ingredient "
-    "amounts used for your selected serving sizes. "
-    "Walmart Package Price reflects the full purchase "
-    "price of the ingredient packages based on the "
-    "Walmart prices recorded in the dataset. "
-    "Actual store prices may vary."
+    "Estimated Cost reflects the ingredient amounts "
+    "used for your selected serving sizes. "
+    "Walmart Package Price reflects the full grocery "
+    "package costs recorded in the dataset. "
+    "The package price is based on the original recipe "
+    "quantities and does not automatically adjust for "
+    "additional servings. Actual store prices may vary."
 )
