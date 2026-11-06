@@ -270,13 +270,13 @@ def show_recipe_images(meal_name, unique_id):
 
     with st.container(key=viewer_key):
 
-        # Center the photo
-        _, image_col, _ = st.columns([0.35, 2.3, 0.35])
+        # Center the photo and reduce its displayed width
+        _, image_col, _ = st.columns([1, 2, 1])
 
         with image_col:
             st.image(
                 image_paths[current_index],
-                use_container_width=True
+                width=400
             )
 
         # Previous photo arrow
