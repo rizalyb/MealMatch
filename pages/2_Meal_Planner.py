@@ -697,49 +697,45 @@ for index, meal in meal_plan.iterrows():
 
         # Meal cost and serving information
         col1, col2, col3 = st.columns(3)
-        
+
         with col1:
             st.metric(
                 "Estimated Cost",
                 f"${meal['Adjusted Cost']:.2f}"
             )
-        
+
         with col2:
-            package_price = meal["Walmart Package Price Number"]
-        
             st.metric(
                 "Walmart Package Price",
                 (
-                    f"${package_price:.2f}"
-                    if pd.notna(package_price)
+                    f"${meal['Walmart Package Price Number']:.2f}"
+                    if pd.notna(meal["Walmart Package Price Number"])
                     else "N/A"
                 )
             )
-        
+
         with col3:
             st.metric(
                 "Cooking Time",
                 f"{meal['Time Number']:.0f} min"
             )
-        
-        col4, col5 = st.columns(2)
-        
+
+        col4, col5, col6 = st.columns(3)
+
         with col4:
-            st.metric(
-                "Servings",
-                desired_servings
-            )
-        
+            st.metric("Servings", desired_servings)
+
         with col5:
             st.metric(
                 "Calories",
                 f"{meal['Adjusted Calories']:.0f}"
             )
-        
-        st.metric(
-            "Protein",
-            f"{meal['Adjusted Protein']:.1f} g"
-        )
+
+        with col6:
+            st.metric(
+                "Protein",
+                f"{meal['Adjusted Protein']:.1f} g"
+            )
         
         st.write("Dietary Type:", meal["Dietary Type"])
         
@@ -855,27 +851,6 @@ st.caption(
     "Total Estimated Cost reflects the ingredient amounts "
     "used for your selected serving sizes."
 )
-
-# --------------------------------------------------
-# WEEKLY BUDGET CHECK
-# --------------------------------------------------
-
-if use_weekly_budget:
-
-    if total_cost <= weekly_budget:
-
-        st.success(
-            f"Your meal plan is within your "
-            f"${weekly_budget:.2f} weekly budget."
-        )
-
-    else:
-
-        st.warning(
-            f"Your meal plan exceeds your weekly budget "
-            f"by ${total_cost - weekly_budget:.2f}."
-        )
-
 
 # --------------------------------------------------
 # SUMMARY EXPLANATION
