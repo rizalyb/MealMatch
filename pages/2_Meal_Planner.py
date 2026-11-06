@@ -276,7 +276,7 @@ def show_recipe_images(meal_name, unique_id):
         with image_col:
             st.image(
                 image_paths[current_index],
-                width=600
+                width=800
             )
 
         # Previous photo arrow
