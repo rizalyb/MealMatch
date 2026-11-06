@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 from pathlib import Path
@@ -393,21 +392,47 @@ else:
                     if photo_requested:
                         open_large_photo = True
 
+                    # Estimated ingredient cost
+                    ingredient_cost = show_value(
+                        meal.get("Ingredient Cost")
+                    )
+
+                    # Walmart package price from Meals CSV
+                    walmart_package_price = show_value(
+                        meal.get("Total Grocery Cost")
+                    )
+
+                    # Total preparation and cooking time
+                    total_time = show_value(
+                        meal.get("Total Time")
+                    )
+
+                    # Display meal information
                     st.write(
-                        f"**Estimated ingredient cost:** "
-                        f"{show_value(meal.get('Ingredient Cost'))}"
+                        f"**Estimated Ingredient Cost:** "
+                        f"${ingredient_cost}"
+                        if ingredient_cost != "Not available"
+                        else "**Estimated Ingredient Cost:** Not available"
                     )
 
                     st.write(
-                        f"**Total time:** "
-                        f"{show_value(meal.get('Total Time'))}"
+                        f"**Walmart Package Price:** "
+                        f"${walmart_package_price}"
+                        if walmart_package_price != "Not available"
+                        else "**Walmart Package Price:** Not available"
+                    )
+
+                    st.write(
+                        f"**Total Time:** "
+                        f"{total_time} min"
+                        if total_time != "Not available"
+                        else "**Total Time:** Not available"
                     )
 
                     st.write(
                         f"**Servings:** "
                         f"{show_value(meal.get('Servings'))}"
                     )
-
                     with st.expander("View Recipe Details"):
 
                         st.markdown("### Meal Information")
