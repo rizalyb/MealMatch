@@ -271,7 +271,7 @@ def show_recipe_images(meal_name, unique_id):
     with st.container(key=viewer_key):
 
         # Center the photo and reduce its displayed width
-        _, image_col, _ = st.columns([1, 2, 1])
+        _, image_col, _ = st.columns([1, 1.5, 1])
 
         with image_col:
             st.image(
