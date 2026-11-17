@@ -614,11 +614,32 @@ if food_preferences.strip():
 # CHECK FOR MATCHING MEALS
 # --------------------------------------------------
 
+# Remove duplicate recipe entries
+filtered_meals = filtered_meals.drop_duplicates(
+    subset=["Meal Name"]
+).reset_index(drop=True)
+
+# Count unique matching recipes
+matching_meal_count = filtered_meals["Meal Name"].nunique()
+
 st.subheader("Your Matching Meals")
 
 st.write(
-    f"{len(filtered_meals)} meals match your current preferences."
+    f"{matching_meal_count} unique meals match "
+    "your current preferences."
 )
+
+# Warn users when there are not enough unique meals
+if matching_meal_count > 0 and matching_meal_count < plan_days:
+
+    st.warning(
+        f"Limited Meal Options: Only {matching_meal_count} "
+        f"unique meals match your current preferences, "
+        f"but you selected {plan_days} days. "
+        "Some meals will repeat in your meal plan. "
+        "Try adjusting your dietary restrictions, budget, "
+        "or cooking time to see more options."
+    )
 
 if filtered_meals.empty:
 
@@ -628,7 +649,6 @@ if filtered_meals.empty:
     )
 
     st.stop()
-
 
 # --------------------------------------------------
 # DETERMINE ORIGINAL SERVINGS
