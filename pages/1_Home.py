@@ -105,10 +105,32 @@ st.markdown(
 # QUICK TIP
 # --------------------------------------------------
 
-st.info(
-    "💡 Set your preferences in the sidebar to get started."
+st.markdown(
+    """
+    <div style="
+        background-color: #eef3eb;
+        border: 1px solid #d9e4d5;
+        border-radius: 12px;
+        padding: 18px 22px;
+        margin-bottom: 25px;
+    ">
+        <div style="
+            color: #294b35;
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        ">
+            ⚙️ Your Preferences
+        </div>
+        <div style="color: #526456; font-size: 15px;">
+            Open the Preference Menu in the sidebar to set
+            your budget, cooking time, dietary needs,
+            and nutrition goals.
+        </div>
+    </div>
+    """,
+    unsafe_allow_html=True
 )
-
 
 # --------------------------------------------------
 # MAIN FEATURES
