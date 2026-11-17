@@ -258,6 +258,20 @@ if grocery_display:
         )
     )
 
+    # SHOPPING PROGRESS
+    
+    progress = checked_count / len(grocery_display)
+    
+    st.write("Shopping Progress")
+    st.progress(progress)
+    
+    st.caption(
+        f"{checked_count} of {len(grocery_display)} ingredients completed"
+    )
+    
+    if checked_count == len(grocery_display):
+        st.success("You've completed your grocery list!")
+
     # DISPLAY SUMMARY
 
     st.subheader("Grocery List Summary")
