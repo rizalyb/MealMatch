@@ -869,15 +869,20 @@ st.divider()
 st.subheader("📅 Your Meal Plan")
 
 st.caption(
-    f"Planning {plan_days} day(s) with {desired_servings} "
-    "serving(s) per meal."
+    f"Planning {len(meal_plan)} day(s) with "
+    f"{desired_servings} serving(s) per meal."
 )
+
+# TEMPORARY CHECK
+st.caption(f"Meals generated: {len(meal_plan)}")
 
 open_large_photo = False
 
 for index, meal in meal_plan.iterrows():
 
-    st.subheader(f"Day {index + 1}: {meal['Meal Name']}")
+    st.subheader(
+        f"Day {index + 1}: {meal['Meal Name']}"
+    )
 
     # DISPLAY MEAL PHOTO CAROUSEL
 
@@ -886,7 +891,6 @@ for index, meal in meal_plan.iterrows():
 
     with st.expander("View Meal Details", expanded=True):
 
-        # Meal cost and serving information
         col1, col2, col3 = st.columns(3)
 
         with col1:
@@ -927,96 +931,93 @@ for index, meal in meal_plan.iterrows():
                 "Protein",
                 f"{meal['Adjusted Protein']:.1f} g"
             )
-        
-        st.write("Dietary Type:", meal["Dietary Type"])
-        
+
+        st.write(
+            "Dietary Type:",
+            meal["Dietary Type"]
+        )
+
         st.write("Cooking Instructions:")
-        
         st.write(meal["Cooking Instructions"])
 
-# ALTERNATIVE MEALS
+    # --------------------------------------------------
+    # ALTERNATIVE MEALS
+    # --------------------------------------------------
 
-show_alternatives = st.checkbox(
-    "Show more meal options",
-    key=f"show_alternatives_{index}"
-)
+    with st.expander("Find an Alternative Meal"):
 
-if show_alternatives:
+        other_meals = filtered_meals[
+            ~filtered_meals["Meal Name"].isin(
+                meal_plan["Meal Name"]
+            )
+        ]
 
-    other_meals = filtered_meals[
-        ~filtered_meals["Meal Name"].isin(
-            meal_plan["Meal Name"]
-        )
-    ]
+        if other_meals.empty:
 
-    if other_meals.empty:
-
-        st.info(
-            "No additional matching meals are available."
-        )
-
-    else:
-
-        alternative_names = (
-            other_meals["Meal Name"].tolist()
-        )
-
-        selected_alternative = st.selectbox(
-            "Choose an alternative meal:",
-            alternative_names,
-            key=f"alternative_{index}"
-        )
-
-        if st.button(
-            "Use This Meal",
-            key=f"use_alternative_{index}"
-        ):
-
-            new_meal = other_meals[
-                other_meals["Meal Name"]
-                == selected_alternative
-            ].iloc[0]
-
-            replacement_cost = (
-                new_meal["Cost Number"]
-                * desired_servings
-                / get_original_servings(new_meal["Servings"])
+            st.info(
+                "No additional matching meals are available."
             )
 
-            current_total = float(
-                meal_plan["Adjusted Cost"].sum()
+        else:
+
+            alternative_names = (
+                other_meals["Meal Name"].tolist()
             )
 
-            revised_total = (
-                current_total
-                - float(meal["Adjusted Cost"])
-                + float(replacement_cost)
+            selected_alternative = st.selectbox(
+                "Choose an alternative meal:",
+                alternative_names,
+                key=f"alternative_{index}"
             )
 
-            if (
-                use_weekly_budget
-                and revised_total > weekly_budget
+            if st.button(
+                "Use This Meal",
+                key=f"use_alternative_{index}"
             ):
 
-                st.warning(
-                    f"This replacement would bring your plan "
-                    f"to ${revised_total:.2f}, which is above "
-                    f"your ${weekly_budget:.2f} weekly budget. "
-                    "Choose a less expensive alternative or "
-                    "increase your weekly budget."
+                new_meal = other_meals[
+                    other_meals["Meal Name"]
+                    == selected_alternative
+                ].iloc[0]
+
+                replacement_cost = (
+                    new_meal["Adjusted Cost"]
                 )
 
-            else:
-
-                st.session_state.meal_plan.loc[index] = new_meal
-
-                st.session_state["weekly_budget_met"] = (
-                    revised_total <= weekly_budget
-                    if use_weekly_budget
-                    else None
+                current_total = float(
+                    meal_plan["Adjusted Cost"].sum()
                 )
 
-                st.rerun()
+                revised_total = (
+                    current_total
+                    - float(meal["Adjusted Cost"])
+                    + float(replacement_cost)
+                )
+
+                if (
+                    use_weekly_budget
+                    and revised_total > weekly_budget
+                ):
+
+                    st.warning(
+                        f"This replacement would bring your "
+                        f"plan to ${revised_total:.2f}, above "
+                        f"your ${weekly_budget:.2f} budget."
+                    )
+
+                else:
+
+                    st.session_state.meal_plan.loc[index] = (
+                        new_meal
+                    )
+
+                    st.session_state["weekly_budget_met"] = (
+                        revised_total <= weekly_budget
+                        if use_weekly_budget
+                        else None
+                    )
+
+                    st.rerun()
 
 
 # --------------------------------------------------
@@ -1025,7 +1026,6 @@ if show_alternatives:
 
 if open_large_photo:
     show_large_photo()
-
 
 # --------------------------------------------------
 # MEAL PLAN SUMMARY
