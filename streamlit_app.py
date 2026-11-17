@@ -47,7 +47,6 @@ st.sidebar.caption(
 
 st.sidebar.divider()
 
-
 # BUDGET
 
 with st.sidebar.expander("💰 Budget", expanded=True):
@@ -70,7 +69,7 @@ with st.sidebar.expander("💰 Budget", expanded=True):
 
         weekly_budget = st.slider(
             "Weekly budget ($)",
-            10,
+            5,
             200,
             30,
             step=5,
