@@ -47,7 +47,14 @@ st.sidebar.caption(
 
 st.sidebar.divider()
 
+# --------------------------------------------------
 # BUDGET
+# --------------------------------------------------
+
+# Set the default weekly budget before creating widgets
+if "weekly_budget" not in st.session_state:
+    st.session_state["weekly_budget"] = 30
+
 
 with st.sidebar.expander("💰 Budget", expanded=True):
 
@@ -71,13 +78,13 @@ with st.sidebar.expander("💰 Budget", expanded=True):
             "Weekly budget ($)",
             5,
             200,
-            30,
             step=5,
             key="weekly_budget"
         )
 
     else:
-        weekly_budget = 30
+
+        weekly_budget = st.session_state["weekly_budget"]
 
 
 # COOKING AND PLANNING
