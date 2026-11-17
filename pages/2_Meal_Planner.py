@@ -447,14 +447,42 @@ filtered_meals["Protein Number"] = pd.to_numeric(
 
 
 # --------------------------------------------------
-# FILTER BY BUDGET
+# CONVERT ORIGINAL SERVINGS AND ADJUSTED MEAL COST
+# --------------------------------------------------
+
+def get_original_servings(value):
+
+    numbers = re.findall(r"\d+", str(value))
+
+    return max(map(int, numbers)) if numbers else 1
+
+
+filtered_meals["Original Servings"] = (
+    filtered_meals["Servings"]
+    .apply(get_original_servings)
+).fillna(1)
+
+
+filtered_meals["Serving Scaling Factor"] = (
+    desired_servings /
+    filtered_meals["Original Servings"]
+)
+
+
+filtered_meals["Adjusted Cost"] = (
+    filtered_meals["Cost Number"] *
+    filtered_meals["Serving Scaling Factor"]
+)
+
+
+# --------------------------------------------------
+# FILTER BY PER-MEAL BUDGET
 # --------------------------------------------------
 
 filtered_meals = filtered_meals[
-    filtered_meals["Cost Number"] <= budget
+    filtered_meals["Adjusted Cost"].notna()
+    & (filtered_meals["Adjusted Cost"] <= budget)
 ]
-
-
 # --------------------------------------------------
 # FILTER BY COOKING TIME
 # --------------------------------------------------
@@ -602,25 +630,188 @@ current_preferences = (
     min_protein
 )
 
-if (
+
+def choose_meal_plan(candidates, number_of_days, weekly_limit):
+
+    candidates = candidates.copy().reset_index(drop=True)
+
+    candidates = candidates[
+        candidates["Adjusted Cost"].notna()
+        & (candidates["Adjusted Cost"] >= 0)
+    ].reset_index(drop=True)
+
+    if candidates.empty:
+        return None, None
+
+    costs = candidates["Adjusted Cost"].astype(float)
+
+    allow_repeats = len(candidates) < number_of_days
+
+    # UNIQUE MEALS
+    if not allow_repeats:
+
+        cheapest_indices = (
+            costs.nsmallest(number_of_days).index.tolist()
+        )
+
+        cheapest_total = float(
+            costs.loc[cheapest_indices].sum()
+        )
+
+        best_indices = None
+        best_total = float("-inf")
+
+        # Search for affordable combinations
+        for _ in range(4000):
+
+            indices = candidates.sample(
+                n=number_of_days,
+                replace=False
+            ).index.tolist()
+
+            total = float(costs.loc[indices].sum())
+
+            if total <= weekly_limit and total > best_total:
+
+                best_indices = indices
+                best_total = total
+
+                if abs(best_total - weekly_limit) < 0.005:
+                    break
+
+        # Use the cheapest combination if it fits
+        if best_indices is None or cheapest_total > best_total:
+
+            if cheapest_total <= weekly_limit:
+
+                best_indices = cheapest_indices
+                best_total = cheapest_total
+
+        if best_indices is not None:
+
+            return (
+                candidates.loc[best_indices].reset_index(drop=True),
+                True
+            )
+
+        # No combination fits the budget.
+        # Display the cheapest available combination.
+
+        return (
+            candidates.loc[cheapest_indices].reset_index(drop=True),
+            False
+        )
+
+    # ALLOW REPEATED MEALS IF NOT ENOUGH RECIPES
+
+    best_indices = None
+    best_total = float("-inf")
+
+    for _ in range(4000):
+
+        indices = candidates.sample(
+            n=number_of_days,
+            replace=True
+        ).index.tolist()
+
+        total = float(costs.loc[indices].sum())
+
+        if total <= weekly_limit and total > best_total:
+
+            best_indices = indices
+            best_total = total
+
+            if abs(best_total - weekly_limit) < 0.005:
+                break
+
+    if best_indices is not None:
+
+        return (
+            candidates.loc[best_indices].reset_index(drop=True),
+            True
+        )
+
+    # Cheapest repeated meal as fallback
+
+    cheapest_index = int(costs.idxmin())
+
+    cheapest_indices = [
+        cheapest_index
+    ] * number_of_days
+
+    return (
+        candidates.loc[cheapest_indices].reset_index(drop=True),
+        False
+    )
+
+
+# CHECK WHETHER PREFERENCES CHANGED
+
+preferences_changed = (
     "meal_plan" not in st.session_state
     or "meal_plan_preferences" not in st.session_state
     or st.session_state.meal_plan_preferences != current_preferences
     or len(st.session_state.meal_plan) != plan_days
-):
+)
 
-    st.session_state.meal_plan = (
-        filtered_meals.sample(
-            n=plan_days,
-            replace=len(filtered_meals) < plan_days
+
+if preferences_changed:
+
+    if filtered_meals.empty:
+
+        st.session_state.meal_plan = pd.DataFrame()
+
+        st.session_state.meal_plan_preferences = (
+            current_preferences
         )
-        .reset_index(drop=True)
-    )
 
-    st.session_state.meal_plan_preferences = current_preferences
+        st.session_state["weekly_budget_met"] = False
+
+    elif use_weekly_budget:
+
+        selected_plan, budget_met = choose_meal_plan(
+            filtered_meals,
+            plan_days,
+            weekly_budget
+        )
+
+        st.session_state.meal_plan = selected_plan
+
+        st.session_state["weekly_budget_met"] = budget_met
+
+        st.session_state.meal_plan_preferences = (
+            current_preferences
+        )
+
+    else:
+
+        st.session_state.meal_plan = (
+            filtered_meals.sample(
+                n=plan_days,
+                replace=len(filtered_meals) < plan_days
+            )
+            .reset_index(drop=True)
+        )
+
+        st.session_state["weekly_budget_met"] = None
+
+        st.session_state.meal_plan_preferences = (
+            current_preferences
+        )
 
 
 meal_plan = st.session_state.meal_plan.copy()
+
+
+if meal_plan.empty:
+
+    st.warning(
+        "No meals match your current preferences and "
+        "per-meal budget. Try increasing your budget "
+        "or changing your filters."
+    )
+
+    st.stop()
 
 
 # Refresh the Walmart package prices even when
@@ -743,54 +934,89 @@ for index, meal in meal_plan.iterrows():
         
         st.write(meal["Cooking Instructions"])
 
-        # ALTERNATIVE MEALS
+# ALTERNATIVE MEALS
 
-        show_alternatives = st.checkbox(
-            "Show more meal options",
-            key=f"show_alternatives_{index}"
+show_alternatives = st.checkbox(
+    "Show more meal options",
+    key=f"show_alternatives_{index}"
+)
+
+if show_alternatives:
+
+    other_meals = filtered_meals[
+        ~filtered_meals["Meal Name"].isin(
+            meal_plan["Meal Name"]
+        )
+    ]
+
+    if other_meals.empty:
+
+        st.info(
+            "No additional matching meals are available."
         )
 
-        if show_alternatives:
+    else:
 
-            other_meals = filtered_meals[
-                ~filtered_meals["Meal Name"].isin(
-                    meal_plan["Meal Name"]
-                )
-            ]
+        alternative_names = (
+            other_meals["Meal Name"].tolist()
+        )
 
-            if other_meals.empty:
+        selected_alternative = st.selectbox(
+            "Choose an alternative meal:",
+            alternative_names,
+            key=f"alternative_{index}"
+        )
 
-                st.info(
-                    "No additional matching meals are available."
+        if st.button(
+            "Use This Meal",
+            key=f"use_alternative_{index}"
+        ):
+
+            new_meal = other_meals[
+                other_meals["Meal Name"]
+                == selected_alternative
+            ].iloc[0]
+
+            replacement_cost = (
+                new_meal["Cost Number"]
+                * desired_servings
+                / get_original_servings(new_meal["Servings"])
+            )
+
+            current_total = float(
+                meal_plan["Adjusted Cost"].sum()
+            )
+
+            revised_total = (
+                current_total
+                - float(meal["Adjusted Cost"])
+                + float(replacement_cost)
+            )
+
+            if (
+                use_weekly_budget
+                and revised_total > weekly_budget
+            ):
+
+                st.warning(
+                    f"This replacement would bring your plan "
+                    f"to ${revised_total:.2f}, which is above "
+                    f"your ${weekly_budget:.2f} weekly budget. "
+                    "Choose a less expensive alternative or "
+                    "increase your weekly budget."
                 )
 
             else:
 
-                alternative_names = (
-                    other_meals["Meal Name"].tolist()
+                st.session_state.meal_plan.loc[index] = new_meal
+
+                st.session_state["weekly_budget_met"] = (
+                    revised_total <= weekly_budget
+                    if use_weekly_budget
+                    else None
                 )
 
-                selected_alternative = st.selectbox(
-                    "Choose an alternative meal:",
-                    alternative_names,
-                    key=f"alternative_{index}"
-                )
-
-                if st.button(
-                    "Use This Meal",
-                    key=f"use_alternative_{index}"
-                ):
-
-                    new_meal = other_meals[
-                        other_meals["Meal Name"]
-                        == selected_alternative
-                    ].iloc[0]
-
-                    st.session_state.meal_plan.loc[
-                        index
-                    ] = new_meal
-
-                    st.rerun()
+                st.rerun()
 
 
 # --------------------------------------------------
