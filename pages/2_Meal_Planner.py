@@ -498,18 +498,55 @@ if max_time is not None:
 # FILTER BY DIETARY RESTRICTIONS
 # --------------------------------------------------
 
-if dietary_restrictions != "None":
+def has_food_tag(value, tag):
+    tags = [
+        item.strip().lower()
+        for item in str(value).splitlines()
+    ]
+
+    return tag.lower() in tags
+
+
+if dietary_restrictions == "Vegetarian":
 
     filtered_meals = filtered_meals[
-        filtered_meals["Dietary Type"]
-        .astype(str)
-        .str.contains(
-            dietary_restrictions,
-            case=False,
-            na=False
+        filtered_meals["Dietary Type"].apply(
+            lambda value: "vegetarian" in [
+                item.strip().lower()
+                for item in str(value).split(",")
+            ]
         )
     ]
 
+elif dietary_restrictions == "Vegan":
+
+    filtered_meals = filtered_meals[
+        filtered_meals["Dietary Type"].apply(
+            lambda value: "vegan" in [
+                item.strip().lower()
+                for item in str(value).split(",")
+            ]
+        )
+    ]
+
+elif dietary_restrictions == "Dairy-free":
+
+    filtered_meals = filtered_meals[
+        filtered_meals["Food Preferences"].apply(
+            lambda value: has_food_tag(value, "Dairy-free")
+        )
+    ]
+
+elif dietary_restrictions == "Gluten-free":
+
+    filtered_meals = filtered_meals[
+        filtered_meals["Food Preferences"].apply(
+            lambda value: (
+                has_food_tag(value, "No gluten")
+                or has_food_tag(value, "Gluten-free")
+            )
+        )
+    ]
 
 # --------------------------------------------------
 # FILTER BY CALORIES
