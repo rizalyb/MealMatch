@@ -996,13 +996,119 @@ for index, meal in meal_plan.iterrows():
                 f"{meal['Adjusted Protein']:.1f} g"
             )
 
-        st.write(
-            "Dietary Type:",
-            meal["Dietary Type"]
+st.write("Dietary Type:", meal["Dietary Type"])
+
+# --------------------------------------------------
+# INGREDIENTS AND NUTRITION BUTTON
+# --------------------------------------------------
+
+details_key = f"show_ingredients_nutrition_{index}"
+
+if details_key not in st.session_state:
+    st.session_state[details_key] = False
+
+if st.button(
+    "Hide Ingredients & Nutrition"
+    if st.session_state[details_key]
+    else "Show Ingredients & Nutrition",
+    key=f"ingredients_nutrition_button_{index}",
+    use_container_width=True
+):
+    st.session_state[details_key] = (
+        not st.session_state[details_key]
+    )
+
+
+# DISPLAY INGREDIENTS AND NUTRITION
+
+if st.session_state[details_key]:
+
+    st.divider()
+
+    # INGREDIENTS
+
+    st.markdown("### 🥕 Ingredients")
+
+    meal_name_key = (
+        str(meal["Meal Name"]).strip().lower()
+    )
+
+    meal_ingredients = ingredients_data[
+        ingredients_data["Meal Name Key"] == meal_name_key
+    ].copy()
+
+    if not meal_ingredients.empty:
+
+        ingredient_columns = [
+            column for column in [
+                "Ingredients",
+                "Quantity",
+                "Unit",
+                "Estimated Cost"
+            ]
+            if column in meal_ingredients.columns
+        ]
+
+        ingredient_display = meal_ingredients[
+            ingredient_columns
+        ]
+
+        st.dataframe(
+            ingredient_display,
+            hide_index=True,
+            use_container_width=True
         )
 
-        st.write("Cooking Instructions:")
-        st.write(meal["Cooking Instructions"])
+    else:
+        st.info("Ingredient details are not available.")
+
+
+    st.divider()
+
+    # NUTRITION INFORMATION
+
+    st.markdown("### ❤️ Nutrition Information")
+
+    nutrition_columns = [
+        ("Calories", "Calories"),
+        ("Total Fat", "Total Fat"),
+        ("Cholesterol", "Cholesterol"),
+        ("Sodium", "Sodium"),
+        ("Total Carbohydrates", "Carbohydrates"),
+        ("Dietary Fiber", "Dietary Fiber"),
+        ("Total Sugars", "Total Sugars"),
+        ("Protein", "Protein")
+    ]
+
+    nutrition_values = []
+
+    for column_name, label in nutrition_columns:
+
+        value = meal.get(column_name)
+
+        if pd.notna(value) and str(value).strip():
+
+            nutrition_values.append(
+                (label, value)
+            )
+
+    if nutrition_values:
+
+        nutrition_cols = st.columns(2)
+
+        for i, (label, value) in enumerate(nutrition_values):
+
+            with nutrition_cols[i % 2]:
+                st.metric(label, str(value))
+
+    else:
+        st.info("Nutrition information is not available.")
+
+
+# COOKING INSTRUCTIONS
+
+st.write("Cooking Instructions:")
+st.write(meal["Cooking Instructions"])
 
 
         # ALTERNATIVE MEALS
