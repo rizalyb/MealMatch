@@ -51,23 +51,36 @@ st.sidebar.divider()
 # BUDGET
 # --------------------------------------------------
 
-# Set the default weekly budget before creating widgets
 if "weekly_budget" not in st.session_state:
     st.session_state["weekly_budget"] = 30
 
 
-with st.sidebar.expander("💰 Budget", expanded=True):
+with st.sidebar.expander("💰 Set Your Budget", expanded=True):
+
+    st.markdown("**Per-Meal Budget**")
+
+    st.caption(
+        "Set the maximum amount you want to spend on each meal."
+    )
 
     budget = st.slider(
-        "Budget per meal ($)",
+        "Maximum cost per meal ($)",
         1,
         30,
         10,
         key="budget"
     )
 
+    st.divider()
+
+    st.markdown("**Weekly Budget**")
+
+    st.caption(
+        "Set a total spending limit for your entire meal plan."
+    )
+
     use_weekly_budget = st.checkbox(
-        "Set a weekly budget",
+        "Enable weekly spending limit",
         value=False,
         key="use_weekly_budget"
     )
@@ -75,7 +88,7 @@ with st.sidebar.expander("💰 Budget", expanded=True):
     if use_weekly_budget:
 
         weekly_budget = st.slider(
-            "Weekly budget ($)",
+            "Total weekly budget ($)",
             5,
             200,
             step=5,
@@ -85,7 +98,6 @@ with st.sidebar.expander("💰 Budget", expanded=True):
     else:
 
         weekly_budget = st.session_state["weekly_budget"]
-
 
 # COOKING AND PLANNING
 
