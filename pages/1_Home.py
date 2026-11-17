@@ -254,11 +254,10 @@ with step1:
 
         st.markdown("### ⚙️ Set Your Preferences")
 
-        st.write(
-            "Choose your budget, cooking time,
-            servings, and food preferences."
+       st.write(
+            "Choose your budget, cooking time, "
+            "servings, and food preferences."
         )
-
 
 with step2:
 
@@ -272,10 +271,9 @@ with step2:
         st.markdown("### 🍽️ Plan Your Meals")
 
         st.write(
-            "Generate a meal plan or browse recipes
-            that fit your preferences."
+            "Generate a meal plan or browse recipes "
+            "that fit your preferences."
         )
-
 
 with step3:
 
@@ -289,8 +287,8 @@ with step3:
         st.markdown("### 🛒 Get Your Groceries")
 
         st.write(
-            "Review your grocery list and
-            keep track of your shopping."
+            "Review your grocery list and "
+            "keep track of your shopping."
         )
 
 
