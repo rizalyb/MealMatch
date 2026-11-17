@@ -343,6 +343,77 @@ if search_query.strip():
         .isin(ingredient_matches)
     ]
 
+# --------------------------------------------------
+# FILTER BY DIETARY RESTRICTIONS
+# --------------------------------------------------
+
+def get_dietary_tags(value):
+    return {
+        tag.strip().casefold()
+        for tag in str(value).splitlines()
+        if tag.strip()
+    }
+
+
+def get_dietary_types(value):
+    return {
+        tag.strip().casefold()
+        for tag in str(value).split(",")
+        if tag.strip()
+    }
+
+
+dietary_filters = st.multiselect(
+    "Filter by dietary preferences:",
+    [
+        "Vegetarian",
+        "Vegan",
+        "Gluten-free",
+        "Dairy-free"
+    ],
+    placeholder="Select one or more dietary preferences"
+)
+
+
+for restriction in dietary_filters:
+
+    if restriction == "Vegetarian":
+
+        filtered_meals = filtered_meals[
+            filtered_meals["Dietary Type"].apply(
+                lambda value: bool(
+                    get_dietary_types(value)
+                    & {"vegetarian", "vegan"}
+                )
+            )
+        ]
+
+    elif restriction == "Vegan":
+
+        filtered_meals = filtered_meals[
+            filtered_meals["Dietary Type"].apply(
+                lambda value: "vegan" in get_dietary_types(value)
+            )
+        ]
+
+    elif restriction == "Gluten-free":
+
+        filtered_meals = filtered_meals[
+            filtered_meals["Food Preferences"].apply(
+                lambda value: bool(
+                    get_dietary_tags(value)
+                    & {"gluten-free", "no gluten"}
+                )
+            )
+        ]
+
+    elif restriction == "Dairy-free":
+
+        filtered_meals = filtered_meals[
+            filtered_meals["Food Preferences"].apply(
+                lambda value: "dairy-free" in get_dietary_tags(value)
+            )
+        ]
 
 # SORT RECIPES
 
