@@ -498,52 +498,59 @@ if max_time is not None:
 # FILTER BY DIETARY RESTRICTIONS
 # --------------------------------------------------
 
-def has_food_tag(value, tag):
-    tags = [
-        item.strip().lower()
-        for item in str(value).splitlines()
-    ]
+def get_dietary_tags(value):
+    return {
+        tag.strip().casefold()
+        for tag in str(value).splitlines()
+        if tag.strip()
+    }
 
-    return tag.lower() in tags
+
+def get_dietary_types(value):
+    return {
+        tag.strip().casefold()
+        for tag in str(value).split(",")
+        if tag.strip()
+    }
 
 
 if dietary_restrictions == "Vegetarian":
 
     filtered_meals = filtered_meals[
         filtered_meals["Dietary Type"].apply(
-            lambda value: "vegetarian" in [
-                item.strip().lower()
-                for item in str(value).split(",")
-            ]
+            lambda value: bool(
+                get_dietary_types(value)
+                & {"vegetarian", "vegan"}
+            )
         )
     ]
+
 
 elif dietary_restrictions == "Vegan":
 
     filtered_meals = filtered_meals[
         filtered_meals["Dietary Type"].apply(
-            lambda value: "vegan" in [
-                item.strip().lower()
-                for item in str(value).split(",")
-            ]
+            lambda value: "vegan" in get_dietary_types(value)
         )
     ]
+
 
 elif dietary_restrictions == "Dairy-free":
 
     filtered_meals = filtered_meals[
         filtered_meals["Food Preferences"].apply(
-            lambda value: has_food_tag(value, "Dairy-free")
+            lambda value: "dairy-free" in get_dietary_tags(value)
         )
     ]
+
 
 elif dietary_restrictions == "Gluten-free":
 
     filtered_meals = filtered_meals[
         filtered_meals["Food Preferences"].apply(
-            lambda value: (
-                has_food_tag(value, "No gluten")
-                or has_food_tag(value, "Gluten-free")
+            lambda value: bool(
+                get_dietary_tags(value)
+                & {"gluten-free", "no gluten"}
             )
         )
     ]
