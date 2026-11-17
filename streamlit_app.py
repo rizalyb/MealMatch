@@ -40,6 +40,7 @@ st.session_state["ingredients"] = ingredients
 # SIDEBAR PREFERENCES
 
 st.sidebar.title("🥗 MealMatch")
+st.sidebar.subheader("⚙️ Preference Menu")
 
 st.sidebar.caption(
     "Customize your meal recommendations."
