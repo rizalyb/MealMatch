@@ -1007,10 +1007,19 @@ for index, meal in meal_plan.iterrows():
 
         # ALTERNATIVE MEALS
 
-        show_alternatives = st.checkbox(
-            "Show more meal options",
-            key=f"show_alternatives_{index}"
-        )
+        with st.container(border=True):
+        
+            st.markdown("### 🔄 Want a different meal?")
+        
+            st.caption(
+                "Browse other recipes that match your preferences "
+                "and compare their cost and nutrition."
+            )
+        
+            show_alternatives = st.toggle(
+                "Show alternative meals",
+                key=f"show_alternatives_{index}"
+            )
 
         if show_alternatives:
 
