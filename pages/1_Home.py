@@ -40,8 +40,8 @@ st.markdown(
     .hero-description {
         color: #526456;
         font-size: 17px;
-        line-height: 1.7;
-        max-width: 700px;
+        line-height: 1.6;
+        max-width: 650px;
     }
 
     .section-label {
@@ -60,8 +60,8 @@ st.markdown(
     .feature-description {
         color: #647067;
         font-size: 14px;
-        line-height: 1.6;
-        min-height: 65px;
+        line-height: 1.5;
+        min-height: 55px;
     }
 
     .step-number {
@@ -92,9 +92,8 @@ st.markdown(
         <div class="hero-tag">🥗 YOUR MEAL PLANNING COMPANION</div>
         <div class="hero-title">Good food starts with a good plan.</div>
         <div class="hero-description">
-            Welcome to MealMatch! Plan affordable meals,
-            find recipes that fit your preferences, and
-            organize your groceries all in one place.
+            Plan affordable meals, explore recipes,
+            and organize your groceries.
         </div>
     </div>
     """,
@@ -107,8 +106,7 @@ st.markdown(
 # --------------------------------------------------
 
 st.info(
-    "💡 Start by setting your budget, cooking time, "
-    "servings, and food preferences in the sidebar."
+    "💡 Set your preferences in the sidebar to get started."
 )
 
 
@@ -122,8 +120,6 @@ st.markdown(
 )
 
 st.header("Explore MealMatch")
-
-st.write("Choose a feature to get started.")
 
 col1, col2, col3 = st.columns(3, gap="medium")
 
@@ -141,8 +137,7 @@ with col1:
 
         st.markdown(
             '<div class="feature-description">'
-            'Create meal plans based on your budget, '
-            'schedule, servings, and food preferences.'
+            'Build a meal plan that fits your needs.'
             '</div>',
             unsafe_allow_html=True
         )
@@ -168,8 +163,7 @@ with col2:
 
         st.markdown(
             '<div class="feature-description">'
-            'Browse recipes and view their ingredients, '
-            'nutrition information, and cooking instructions.'
+            'Find recipes and view their details.'
             '</div>',
             unsafe_allow_html=True
         )
@@ -195,8 +189,7 @@ with col3:
 
         st.markdown(
             '<div class="feature-description">'
-            'Keep track of your ingredients, quantities, '
-            'estimated costs, and shopping progress.'
+            'Organize ingredients and track shopping.'
             '</div>',
             unsafe_allow_html=True
         )
@@ -210,7 +203,7 @@ with col3:
 
 
 # --------------------------------------------------
-# HOW MEALMATCH WORKS
+# HOW IT WORKS
 # --------------------------------------------------
 
 st.divider()
@@ -220,12 +213,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-st.header("Meal planning in three simple steps")
-
-st.write(
-    "MealMatch helps you organize your meals from "
-    "choosing your preferences to preparing your grocery list."
-)
+st.header("Three Simple Steps")
 
 step1, step2, step3 = st.columns(3, gap="medium")
 
@@ -238,13 +226,8 @@ with step1:
         )
 
         st.markdown("## ⚙️")
-
         st.subheader("Set Your Preferences")
-
-        st.write(
-            "Choose your budget, cooking time, "
-            "servings, and dietary needs."
-        )
+        st.write("Choose your budget and food preferences.")
 
 
 with step2:
@@ -255,13 +238,8 @@ with step2:
         )
 
         st.markdown("## 🥗")
-
-        st.subheader("Plan Your Meals")
-
-        st.write(
-            "Generate a meal plan or browse recipes "
-            "that match your preferences."
-        )
+        st.subheader("Choose Your Meals")
+        st.write("Generate a plan or browse recipes.")
 
 
 with step3:
@@ -272,13 +250,8 @@ with step3:
         )
 
         st.markdown("## 🛒")
-
         st.subheader("Organize Your Groceries")
-
-        st.write(
-            "Review your grocery list, check off "
-            "ingredients, and track your shopping."
-        )
+        st.write("Review your list and track your shopping.")
 
 
 # --------------------------------------------------
