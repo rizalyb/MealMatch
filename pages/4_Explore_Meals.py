@@ -344,10 +344,59 @@ if search_query.strip():
     ]
 
 
+# SORT RECIPES
+
+sort_option = st.selectbox(
+    "Sort recipes by:",
+    [
+        "Default",
+        "Lowest ingredient cost",
+        "Shortest cooking time",
+        "Meal name (A-Z)"
+    ]
+)
+
+if sort_option == "Lowest ingredient cost":
+
+    filtered_meals["_sort_cost"] = pd.to_numeric(
+        filtered_meals["Ingredient Cost"]
+        .astype(str)
+        .str.replace("$", "", regex=False)
+        .str.replace(",", "", regex=False),
+        errors="coerce"
+    )
+
+    filtered_meals = filtered_meals.sort_values(
+        "_sort_cost",
+        na_position="last"
+    ).drop(columns="_sort_cost")
+
+
+elif sort_option == "Shortest cooking time":
+
+    filtered_meals["_sort_time"] = pd.to_numeric(
+        filtered_meals["Total Time"]
+        .astype(str)
+        .str.extract(r"(\d+(?:\.\d+)?)")[0],
+        errors="coerce"
+    )
+
+    filtered_meals = filtered_meals.sort_values(
+        "_sort_time",
+        na_position="last"
+    ).drop(columns="_sort_time")
+
+
+elif sort_option == "Meal name (A-Z)":
+
+    filtered_meals = filtered_meals.sort_values(
+        "Meal Name"
+    )
+
+
 st.write(f"Showing {len(filtered_meals)} recipes.")
 
 st.divider()
-
 
 # --------------------------------------------------
 # DISPLAY RECIPE CARDS
