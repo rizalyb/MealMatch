@@ -78,9 +78,6 @@ with st.sidebar.expander("💰 Budget", expanded=True):
 
     else:
         weekly_budget = 30
-        st.session_state["weekly_budget"] = weekly_budget
-
-st.session_state["weekly_budget"] = weekly_budget
 
 
 # COOKING AND PLANNING
