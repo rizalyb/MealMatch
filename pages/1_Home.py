@@ -4,53 +4,30 @@ import streamlit as st
 
 st.title("🥗 Welcome to MealMatch")
 
-st.caption("Plan. Cook. Enjoy.")
-
-# WELCOME BANNER
-
-with st.container(border=True):
-
-    st.markdown(
-        "🥗 YOUR MEAL PLANNING COMPANION"
-    )
-
-    st.title("Welcome to MealMatch!")
-
-    st.subheader(
-        "Plan meals around your budget, schedule, and taste."
-    )
-
-    st.write(
-        "Find affordable recipes, organize your weekly meals, "
-        "and create a grocery list based on your needs. "
-        "Everything you need for easier meal planning in one place."
-    )
-
-    st.success(
-        "PLAN SMARTER. EAT BETTER. SPEND WISELY."
-    )
-
-
-# QUICK INFORMATION
-
-st.info(
-    "💡 Start by adjusting your budget, cooking time, "
-    "food preferences, and nutrition goals in the sidebar."
+st.caption(
+    "Plan. Cook. Enjoy."
 )
+
+st.write(
+    "Plan affordable meals, explore recipes, "
+    "and organize your grocery list in one place."
+)
+
+st.divider()
 
 
 # MAIN NAVIGATION
 
-st.header("Explore MealMatch")
+st.header("Get Started")
 
 st.write(
-    "Choose where you would like to start."
+    "Choose what you would like to do."
 )
 
 col1, col2, col3 = st.columns(3, gap="medium")
 
 
-# MEAL PLANNER CARD
+# MEAL PLANNER
 
 with col1:
 
@@ -61,8 +38,8 @@ with col1:
         st.subheader("Meal Planner")
 
         st.write(
-            "Find recipes that fit your budget, "
-            "schedule, and preferences."
+            "Create a meal plan based on your "
+            "budget, schedule, and food preferences."
         )
 
         st.page_link(
@@ -73,7 +50,7 @@ with col1:
         )
 
 
-# EXPLORE MEALS CARD
+# EXPLORE MEALS
 
 with col2:
 
@@ -84,8 +61,8 @@ with col2:
         st.subheader("Explore Meals")
 
         st.write(
-            "Browse recipes, ingredients, nutrition, "
-            "and cooking instructions."
+            "Search recipes, compare costs, "
+            "and view ingredients and instructions."
         )
 
         st.page_link(
@@ -96,7 +73,7 @@ with col2:
         )
 
 
-# GROCERY LIST CARD
+# GROCERY LIST
 
 with col3:
 
@@ -107,8 +84,8 @@ with col3:
         st.subheader("Grocery List")
 
         st.write(
-            "Organize ingredients, quantities, "
-            "and estimated grocery costs."
+            "Review ingredients, quantities, "
+            "and estimated shopping costs."
         )
 
         st.page_link(
@@ -122,12 +99,12 @@ with col3:
 st.divider()
 
 
-# HOW MEALMATCH WORKS
+# HOW IT WORKS
 
 st.header("How MealMatch Works")
 
 st.write(
-    "Three simple steps to organize your meals."
+    "Follow these three steps to organize your meals."
 )
 
 step1, step2, step3 = st.columns(3, gap="medium")
@@ -137,13 +114,14 @@ with step1:
 
     with st.container(border=True):
 
-        st.markdown("## ⚙️")
+        st.markdown("## 1️⃣")
 
-        st.subheader("1. Set Your Preferences")
+        st.subheader("Set Your Preferences")
 
         st.write(
-            "Choose your budget, cooking time, "
-            "servings, and dietary needs."
+            "Adjust your budget, cooking time, "
+            "servings, dietary needs, and nutrition goals "
+            "using the sidebar."
         )
 
 
@@ -151,12 +129,12 @@ with step2:
 
     with st.container(border=True):
 
-        st.markdown("## 🥗")
+        st.markdown("## 2️⃣")
 
-        st.subheader("2. Plan Your Meals")
+        st.subheader("Plan Your Meals")
 
         st.write(
-            "Explore recipes and select meals "
+            "Generate a meal plan or browse recipes "
             "that match your preferences."
         )
 
@@ -165,13 +143,13 @@ with step3:
 
     with st.container(border=True):
 
-        st.markdown("## 🛒")
+        st.markdown("## 3️⃣")
 
-        st.subheader("3. Get Your Grocery List")
+        st.subheader("Prepare Your Groceries")
 
         st.write(
-            "Review combined ingredients, "
-            "quantities, and estimated costs."
+            "Use your grocery list to organize "
+            "ingredients and track your shopping."
         )
 
 
@@ -179,12 +157,6 @@ with step3:
 
 st.divider()
 
-with st.container():
-
-    st.markdown(
-        "### Good food. Smart planning. Better choices."
-    )
-
-    st.caption(
-        "MealMatch | Plan. Cook. Enjoy."
-    )
+st.caption(
+    "MealMatch | Plan. Cook. Enjoy."
+)
