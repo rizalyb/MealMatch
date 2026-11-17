@@ -1007,17 +1007,20 @@ for index, meal in meal_plan.iterrows():
 
         # ALTERNATIVE MEALS
 
-        with st.container(border=True):
-        
-            st.markdown("### 🔄 Want a different meal?")
-        
+        with st.expander(
+            "🔄 Explore Other Meals",
+            expanded=False
+        ):
+
             st.caption(
-                "Browse other recipes that match your preferences "
-                "and compare their cost and nutrition."
+                "Looking for something different? "
+                "Browse other recipes that match your preferences."
             )
-        
+
+            # Keep the existing alternative meal code here
+            
             show_alternatives = st.toggle(
-                "Show alternative meals",
+                "Explore Other Meals",
                 key=f"show_alternatives_{index}"
             )
 
