@@ -6,7 +6,18 @@ from pathlib import Path
 
 
 # --------------------------------------------------
-# LOAD DATA AND PREFERENCES
+# IMAGE FOLDERS
+# --------------------------------------------------
+
+APP_DIR = Path(__file__).resolve().parent.parent
+
+HOMEMADE_DIR = APP_DIR / "images" / "homemade"
+RESTAURANT_DIR = APP_DIR / "images" / "restaurant"
+INGREDIENTS_DIR = APP_DIR / "images" / "ingredients"
+
+
+# --------------------------------------------------
+# LOAD SHARED DATA AND PREFERENCES
 # --------------------------------------------------
 
 meals = st.session_state["meals"]
@@ -26,43 +37,118 @@ food_preferences = st.session_state["food_preferences"]
 max_calories = st.session_state["max_calories"]
 min_protein = st.session_state["min_protein"]
 
-APP_DIR = Path(__file__).resolve().parent.parent
-
-HOMEMADE_DIR = APP_DIR / "images" / "homemade"
-RESTAURANT_DIR = APP_DIR / "images" / "restaurant"
-INGREDIENTS_DIR = APP_DIR / "images" / "ingredients"
-
 
 # --------------------------------------------------
-# HELPER FUNCTIONS
+# HELPER FUNCTION FOR PRICE CONVERSION
 # --------------------------------------------------
 
 def convert_price(value):
+
     if pd.isna(value):
         return float("nan")
 
-    cleaned = (
+    cleaned_value = (
         str(value)
         .replace("$", "")
         .replace(",", "")
         .strip()
     )
 
-    return pd.to_numeric(cleaned, errors="coerce")
+    return pd.to_numeric(cleaned_value, errors="coerce")
 
 
-def get_original_servings(value):
-    numbers = re.findall(r"\d+", str(value))
-    return max(map(int, numbers)) if numbers else 1
+# --------------------------------------------------
+# PHOTO HOVER CONTROLS
+# --------------------------------------------------
 
+st.markdown(
+    """
+    <style>
+
+    div[class*="st-key-photo_viewer_"] {
+        position: relative;
+    }
+
+    div[class*="st-key-photo_prev_"],
+    div[class*="st-key-photo_next_"],
+    div[class*="st-key-photo_expand_"] {
+        position: absolute !important;
+        z-index: 10;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+    }
+
+    div[class*="st-key-photo_viewer_"]:hover
+    div[class*="st-key-photo_prev_"],
+    div[class*="st-key-photo_viewer_"]:hover
+    div[class*="st-key-photo_next_"],
+    div[class*="st-key-photo_viewer_"]:hover
+    div[class*="st-key-photo_expand_"] {
+        opacity: 1;
+    }
+
+    /* Left arrow */
+    div[class*="st-key-photo_prev_"] {
+        left: 30%;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+    /* Right arrow */
+    div[class*="st-key-photo_next_"] {
+        right: 30%;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+    /* Expand icon */
+    div[class*="st-key-photo_expand_"] {
+        right: 30%;
+        bottom: 8px;
+    }
+
+    /* Button appearance */
+    div[class*="st-key-photo_prev_"] button,
+    div[class*="st-key-photo_next_"] button,
+    div[class*="st-key-photo_expand_"] button {
+        border-radius: 50%;
+        background-color: rgba(0, 0, 0, 0.65);
+        color: white;
+        border: none;
+        min-width: 38px;
+        width: 38px;
+        height: 38px;
+        padding: 0;
+        font-size: 22px;
+    }
+
+    div[class*="st-key-photo_prev_"] button:hover,
+    div[class*="st-key-photo_next_"] button:hover,
+    div[class*="st-key-photo_expand_"] button:hover {
+        background-color: rgba(0, 0, 0, 0.85);
+        color: white;
+    }
+
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+
+# --------------------------------------------------
+# PHOTO HELPER FUNCTIONS
+# --------------------------------------------------
 
 def get_image_name(meal_name):
+
     name = str(meal_name).lower().strip()
     name = re.sub(r"[^a-z0-9]+", "_", name)
+
     return name.strip("_")
 
 
 def get_meal_photo_paths(meal_name):
+
     image_name = get_image_name(meal_name)
 
     possible_photos = [
@@ -74,10 +160,13 @@ def get_meal_photo_paths(meal_name):
     image_paths = []
 
     for folder, filename in possible_photos:
+
         for extension in [".jpeg", ".jpg", ".png"]:
+
             photo_path = folder / f"{filename}{extension}"
 
             if photo_path.exists():
+
                 image_paths.append(photo_path)
                 break
 
@@ -85,10 +174,93 @@ def get_meal_photo_paths(meal_name):
 
 
 # --------------------------------------------------
-# RECIPE PHOTO DISPLAY
+# ENLARGED RECIPE PHOTO DIALOG
+# --------------------------------------------------
+
+@st.dialog("Recipe Photos", width="large")
+def show_large_photo():
+
+    image_paths = st.session_state.get(
+        "large_photo_paths", []
+    )
+
+    if not image_paths:
+        st.info("No recipe photos are available.")
+        return
+
+    selected_photo = st.session_state.get(
+        "large_photo_index", 0
+    )
+
+    selected_photo = selected_photo % len(image_paths)
+
+    st.image(
+        image_paths[selected_photo],
+        use_container_width=False,
+        width=720
+    )
+
+    photo_name = Path(
+        image_paths[selected_photo]
+    ).stem
+
+    if photo_name.endswith("_hm"):
+        photo_label = "Homemade"
+
+    elif photo_name.endswith("_r"):
+        photo_label = "Restaurant"
+
+    elif photo_name.endswith("_i"):
+        photo_label = "Ingredients"
+
+    else:
+        photo_label = "Recipe Photo"
+
+    st.caption(
+        f"{photo_label} Photo "
+        f"({selected_photo + 1} of {len(image_paths)})"
+    )
+
+    if len(image_paths) > 1:
+
+        previous_col, next_col = st.columns(2)
+
+        with previous_col:
+
+            if st.button(
+                "← Previous",
+                use_container_width=True,
+                key="meal_planner_dialog_previous_photo"
+            ):
+
+                st.session_state["large_photo_index"] = (
+                    selected_photo - 1
+                ) % len(image_paths)
+
+                st.rerun(scope="fragment")
+
+        with next_col:
+
+            if st.button(
+                "Next →",
+                use_container_width=True,
+                key="meal_planner_dialog_next_photo"
+            ):
+
+                st.session_state["large_photo_index"] = (
+                    selected_photo + 1
+                ) % len(image_paths)
+
+                st.rerun(scope="fragment")
+
+
+# --------------------------------------------------
+# RECIPE PHOTO CAROUSEL
 # --------------------------------------------------
 
 def show_recipe_images(meal_name, unique_id):
+
+    image_name = get_image_name(meal_name)
 
     image_paths = get_meal_photo_paths(meal_name)
 
@@ -96,43 +268,69 @@ def show_recipe_images(meal_name, unique_id):
         st.caption("📷 Recipe photos coming soon.")
         return False
 
-    photo_key = f"meal_photo_{unique_id}"
+    photo_key = (
+        f"meal_planner_photo_index_{unique_id}_{image_name}"
+    )
 
     if photo_key not in st.session_state:
         st.session_state[photo_key] = 0
 
-    current_index = st.session_state[photo_key] % len(image_paths)
+    current_index = (
+        st.session_state[photo_key] % len(image_paths)
+    )
 
-    image_col = st.columns([1, 2, 1])[1]
+    viewer_key = (
+        f"photo_viewer_{unique_id}_{image_name}"
+    )
 
-    with image_col:
-        st.image(image_paths[current_index], use_container_width=True)
+    with st.container(key=viewer_key):
 
-    if len(image_paths) > 1:
+        _, image_col, _ = st.columns([1, 1.5, 1])
 
-        previous_col, next_col = st.columns(2)
+        with image_col:
+            st.image(
+                image_paths[current_index],
+                width=800
+            )
 
-        with previous_col:
+        if len(image_paths) > 1:
+
             if st.button(
-                "← Previous",
-                key=f"previous_photo_{unique_id}",
-                use_container_width=True
+                "‹",
+                key=f"photo_prev_{unique_id}_{image_name}"
             ):
+
                 st.session_state[photo_key] = (
                     current_index - 1
                 ) % len(image_paths)
+
                 st.rerun()
 
-        with next_col:
             if st.button(
-                "Next →",
-                key=f"next_photo_{unique_id}",
-                use_container_width=True
+                "›",
+                key=f"photo_next_{unique_id}_{image_name}"
             ):
+
                 st.session_state[photo_key] = (
                     current_index + 1
                 ) % len(image_paths)
+
                 st.rerun()
+
+        if st.button(
+            "⛶",
+            key=f"photo_expand_{unique_id}_{image_name}"
+        ):
+
+            st.session_state["large_photo_paths"] = [
+                str(path) for path in image_paths
+            ]
+
+            st.session_state["large_photo_index"] = (
+                current_index
+            )
+
+            return True
 
     return False
 
@@ -157,6 +355,7 @@ st.divider()
 
 filtered_meals = meals.copy()
 
+# Standardize meal names for matching
 filtered_meals["Meal Name Key"] = (
     filtered_meals["Meal Name"]
     .astype(str)
@@ -175,8 +374,13 @@ ingredients_data["Meal Name Key"] = (
 
 
 # --------------------------------------------------
-# WALMART PACKAGE PRICE
+# GET WALMART PACKAGE PRICE TOTALS
 # --------------------------------------------------
+
+# First, use Total Grocery Cost from the Meals CSV.
+# If a meal does not have a value, calculate its
+# package price using the Price Total column
+# in the Ingredients CSV.
 
 if "Total Grocery Cost" in filtered_meals.columns:
 
@@ -185,9 +389,11 @@ if "Total Grocery Cost" in filtered_meals.columns:
     )
 
 else:
+
     filtered_meals["Walmart Package Price Number"] = float("nan")
 
 
+# Calculate package totals from the Ingredients CSV
 if "Price Total" in ingredients_data.columns:
 
     ingredients_data["Price Total Number"] = (
@@ -200,10 +406,13 @@ if "Price Total" in ingredients_data.columns:
         ].sum(min_count=1)
     )
 
-    fallback_prices = filtered_meals["Meal Name Key"].map(
-        price_by_meal
+    fallback_prices = (
+        filtered_meals["Meal Name Key"]
+        .map(price_by_meal)
     )
 
+    # Use the Ingredients CSV when the Meals CSV
+    # does not contain a package price for a meal.
     filtered_meals["Walmart Package Price Number"] = (
         filtered_meals["Walmart Package Price Number"]
         .fillna(fallback_prices)
@@ -211,7 +420,7 @@ if "Price Total" in ingredients_data.columns:
 
 
 # --------------------------------------------------
-# CONVERT MEAL INFORMATION
+# CONVERT MEAL INFORMATION TO NUMBERS
 # --------------------------------------------------
 
 filtered_meals["Cost Number"] = (
@@ -239,20 +448,26 @@ filtered_meals["Protein Number"] = pd.to_numeric(
 
 
 # --------------------------------------------------
-# ADJUST COST FOR SERVINGS
+# CONVERT ORIGINAL SERVINGS AND ADJUSTED MEAL COST
 # --------------------------------------------------
+
+def get_original_servings(value):
+
+    numbers = re.findall(r"\d+", str(value))
+
+    return max(map(int, numbers)) if numbers else 1
+
 
 filtered_meals["Original Servings"] = (
     filtered_meals["Servings"].apply(get_original_servings)
-)
+).fillna(1)
 
 filtered_meals["Serving Scaling Factor"] = (
     desired_servings / filtered_meals["Original Servings"]
 )
 
 filtered_meals["Adjusted Cost"] = (
-    filtered_meals["Cost Number"]
-    * filtered_meals["Serving Scaling Factor"]
+    filtered_meals["Cost Number"] * filtered_meals["Serving Scaling Factor"]
 )
 
 
@@ -260,6 +475,8 @@ filtered_meals["Adjusted Cost"] = (
 # FILTER BY PER-MEAL BUDGET
 # --------------------------------------------------
 
+# Apply the per-meal limit after adjusting the recipe
+# cost to the number of servings selected by the user.
 filtered_meals = filtered_meals[
     filtered_meals["Adjusted Cost"].notna()
     & (filtered_meals["Adjusted Cost"] <= budget)
@@ -281,57 +498,15 @@ if max_time is not None:
 # FILTER BY DIETARY RESTRICTIONS
 # --------------------------------------------------
 
-def get_dietary_tags(value):
-    return {
-        tag.strip().casefold()
-        for tag in str(value).splitlines()
-        if tag.strip()
-    }
-
-
-def get_dietary_types(value):
-    return {
-        tag.strip().casefold()
-        for tag in str(value).split(",")
-        if tag.strip()
-    }
-
-
-if dietary_restrictions == "Vegetarian":
+if dietary_restrictions != "None":
 
     filtered_meals = filtered_meals[
-        filtered_meals["Dietary Type"].apply(
-            lambda value: bool(
-                get_dietary_types(value)
-                & {"vegetarian", "vegan"}
-            )
-        )
-    ]
-
-elif dietary_restrictions == "Vegan":
-
-    filtered_meals = filtered_meals[
-        filtered_meals["Dietary Type"].apply(
-            lambda value: "vegan" in get_dietary_types(value)
-        )
-    ]
-
-elif dietary_restrictions == "Gluten-free":
-
-    filtered_meals = filtered_meals[
-        filtered_meals["Food Preferences"].apply(
-            lambda value: bool(
-                get_dietary_tags(value)
-                & {"gluten-free", "no gluten"}
-            )
-        )
-    ]
-
-elif dietary_restrictions == "Dairy-free":
-
-    filtered_meals = filtered_meals[
-        filtered_meals["Food Preferences"].apply(
-            lambda value: "dairy-free" in get_dietary_tags(value)
+        filtered_meals["Dietary Type"]
+        .astype(str)
+        .str.contains(
+            dietary_restrictions,
+            case=False,
+            na=False
         )
     ]
 
@@ -392,12 +567,14 @@ if food_preferences.strip():
         )
 
     filtered_meals = filtered_meals[
-        ~filtered_meals["Meal Name"].apply(contains_avoided_food)
+        ~filtered_meals["Meal Name"].apply(
+            contains_avoided_food
+        )
     ]
 
 
 # --------------------------------------------------
-# CHECK MATCHING MEALS
+# CHECK FOR MATCHING MEALS
 # --------------------------------------------------
 
 st.subheader("Your Matching Meals")
@@ -435,24 +612,39 @@ current_preferences = (
 
 
 def choose_meal_plan(candidates, number_of_days, weekly_limit):
+    """Choose a varied plan whose adjusted ingredient cost fits the limit.
+
+    Random trials aim to use as much of the budget as possible. The cheapest
+    possible combination is included as a guaranteed feasible fallback when
+    one exists.
+    """
 
     candidates = candidates.copy().reset_index(drop=True)
 
+    candidates = candidates[
+        candidates["Adjusted Cost"].notna()
+        & (candidates["Adjusted Cost"] >= 0)
+    ].reset_index(drop=True)
+
+    if candidates.empty:
+        return None, None
+
     costs = candidates["Adjusted Cost"].astype(float)
 
+    # If fewer unique recipes exist than planned days, retain the app's
+    # previous behavior of allowing a recipe to appear more than once.
     allow_repeats = len(candidates) < number_of_days
 
     if not allow_repeats:
 
-        cheapest_indices = costs.nsmallest(
-            number_of_days
-        ).index.tolist()
-
+        cheapest_indices = costs.nsmallest(number_of_days).index.tolist()
         cheapest_total = float(costs.loc[cheapest_indices].sum())
 
         best_indices = None
         best_total = float("-inf")
 
+        # Randomized search finds an affordable combination that makes
+        # reasonable use of the weekly budget.
         for _ in range(4000):
 
             indices = candidates.sample(
@@ -463,22 +655,32 @@ def choose_meal_plan(candidates, number_of_days, weekly_limit):
             total = float(costs.loc[indices].sum())
 
             if total <= weekly_limit and total > best_total:
+
                 best_indices = indices
                 best_total = total
 
                 if abs(best_total - weekly_limit) < 0.005:
                     break
 
-        if best_indices is None:
+        # The cheapest combination guarantees a fit whenever one exists.
+        if best_indices is None or cheapest_total > best_total:
 
             if cheapest_total <= weekly_limit:
                 best_indices = cheapest_indices
+                best_total = cheapest_total
 
         if best_indices is not None:
             return candidates.loc[best_indices].reset_index(drop=True), True
 
-        return candidates.loc[cheapest_indices].reset_index(drop=True), False
+        # No combination fits. Show the least expensive possible plan so
+        # the user sees the smallest budget shortfall rather than a random one.
+        return (
+            candidates.loc[cheapest_indices].reset_index(drop=True),
+            False
+        )
 
+    # Repeated recipes are only permitted when there are fewer recipes
+    # available than the number of requested planning days.
     best_indices = None
     best_total = float("-inf")
 
@@ -492,6 +694,7 @@ def choose_meal_plan(candidates, number_of_days, weekly_limit):
         total = float(costs.loc[indices].sum())
 
         if total <= weekly_limit and total > best_total:
+
             best_indices = indices
             best_total = total
 
@@ -516,7 +719,13 @@ preferences_changed = (
 
 if preferences_changed:
 
-    if use_weekly_budget:
+    if filtered_meals.empty:
+
+        st.session_state.meal_plan = pd.DataFrame()
+        st.session_state.meal_plan_preferences = current_preferences
+        st.session_state["weekly_budget_met"] = False
+
+    elif use_weekly_budget:
 
         selected_plan, budget_met = choose_meal_plan(
             filtered_meals,
@@ -526,6 +735,7 @@ if preferences_changed:
 
         st.session_state.meal_plan = selected_plan
         st.session_state["weekly_budget_met"] = budget_met
+        st.session_state.meal_plan_preferences = current_preferences
 
     else:
 
@@ -538,21 +748,22 @@ if preferences_changed:
         )
 
         st.session_state["weekly_budget_met"] = None
-
-    st.session_state.meal_plan_preferences = current_preferences
+        st.session_state.meal_plan_preferences = current_preferences
 
 
 meal_plan = st.session_state.meal_plan.copy()
 
 if meal_plan.empty:
-    st.warning("No matching meals are available.")
+
+    st.warning(
+        "No meals match your current preferences and per-meal budget. "
+        "Try increasing your per-meal budget or changing your filters."
+    )
+
     st.stop()
 
 
-# --------------------------------------------------
-# UPDATE PACKAGE PRICES
-# --------------------------------------------------
-
+# Refresh package prices using the current filtered meal data.
 meal_plan["Meal Name Key"] = (
     meal_plan["Meal Name"]
     .astype(str)
@@ -609,16 +820,20 @@ st.caption(
     "serving(s) per meal."
 )
 
+open_large_photo = False
+
 for index, meal in meal_plan.iterrows():
 
     st.subheader(f"Day {index + 1}: {meal['Meal Name']}")
 
-    show_recipe_images(meal["Meal Name"], index)
+    # DISPLAY MEAL PHOTO CAROUSEL
+
+    if show_recipe_images(meal["Meal Name"], index):
+        open_large_photo = True
 
     with st.expander("View Meal Details", expanded=True):
 
-        # COST AND COOKING INFORMATION
-
+        # Meal cost and serving information
         col1, col2, col3 = st.columns(3)
 
         with col1:
@@ -662,9 +877,13 @@ for index, meal in meal_plan.iterrows():
 
         st.write("Dietary Type:", meal["Dietary Type"])
 
+        st.write("Cooking Instructions:")
+
+        st.write(meal["Cooking Instructions"])
+
 
         # --------------------------------------------------
-        # INGREDIENTS AND NUTRITION BUTTON
+        # INGREDIENTS AND NUTRITION DETAILS
         # --------------------------------------------------
 
         details_key = f"show_ingredients_nutrition_{index}"
@@ -672,12 +891,15 @@ for index, meal in meal_plan.iterrows():
         if details_key not in st.session_state:
             st.session_state[details_key] = False
 
-        if st.button(
+        button_label = (
             "Hide Ingredients & Nutrition"
             if st.session_state[details_key]
-            else "Show Ingredients & Nutrition",
-            key=f"ingredients_nutrition_button_{index}",
-            use_container_width=True
+            else "Show Ingredients & Nutrition"
+        )
+
+        if st.button(
+            button_label,
+            key=f"ingredients_nutrition_button_{index}"
         ):
 
             st.session_state[details_key] = (
@@ -686,11 +908,7 @@ for index, meal in meal_plan.iterrows():
 
         if st.session_state[details_key]:
 
-            st.divider()
-
-            # INGREDIENTS
-
-            st.markdown("### 🥕 Ingredients")
+            st.markdown("#### Ingredients")
 
             meal_name_key = (
                 str(meal["Meal Name"]).strip().lower()
@@ -700,84 +918,85 @@ for index, meal in meal_plan.iterrows():
                 ingredients_data["Meal Name Key"] == meal_name_key
             ].copy()
 
-            if not meal_ingredients.empty:
-
-                ingredient_columns = [
-                    column for column in [
-                        "Ingredients",
-                        "Quantity",
-                        "Unit",
-                        "Estimated Cost"
-                    ]
-                    if column in meal_ingredients.columns
+            ingredient_columns = [
+                column for column in [
+                    "Ingredients",
+                    "Quantity",
+                    "Unit",
+                    "Estimated Cost",
+                    "Estimated Total"
                 ]
+                if column in meal_ingredients.columns
+            ]
+
+            if meal_ingredients.empty:
+
+                st.info("Ingredient details are not available for this meal.")
+
+            elif ingredient_columns:
 
                 st.dataframe(
-                    meal_ingredients[ingredient_columns],
-                    hide_index=True,
-                    use_container_width=True
+                    meal_ingredients[ingredient_columns].reset_index(drop=True),
+                    use_container_width=True,
+                    hide_index=True
                 )
 
             else:
-                st.info("Ingredient details are not available.")
 
-            st.divider()
+                st.info("Ingredient details are not available for this meal.")
 
-            # NUTRITION INFORMATION
+            st.markdown("#### Nutrition")
 
-            st.markdown("### ❤️ Nutrition Information")
+            nutrition_fields = {
+                "Calories": "Calories",
+                "Total Fat": "Total Fat",
+                "Cholesterol": "Cholesterol",
+                "Sodium": "Sodium",
+                "Total Carbohydrates": "Total Carbohydrates",
+                "Dietary Fiber": "Dietary Fiber",
+                "Total Sugars": "Total Sugars",
+                "Protein": "Protein"
+            }
 
-            nutrition_columns = [
-                ("Calories", "Calories"),
-                ("Total Fat", "Total Fat"),
-                ("Cholesterol", "Cholesterol"),
-                ("Sodium", "Sodium"),
-                ("Total Carbohydrates", "Carbohydrates"),
-                ("Dietary Fiber", "Dietary Fiber"),
-                ("Total Sugars", "Total Sugars"),
-                ("Protein", "Protein")
-            ]
+            nutrition_data = {
+                label: meal[column]
+                for label, column in nutrition_fields.items()
+                if column in meal.index and pd.notna(meal[column])
+            }
 
-            nutrition_values = []
+            if nutrition_data:
 
-            for column_name, label in nutrition_columns:
+                nutrition_table = pd.DataFrame(
+                    list(nutrition_data.items()),
+                    columns=["Nutrient", "Amount"]
+                )
 
-                value = meal.get(column_name)
+                st.dataframe(
+                    nutrition_table,
+                    use_container_width=True,
+                    hide_index=True
+                )
 
-                if pd.notna(value) and str(value).strip():
-
-                    nutrition_values.append((label, value))
-
-            if nutrition_values:
-
-                nutrition_cols = st.columns(2)
-
-                for i, (label, value) in enumerate(nutrition_values):
-
-                    with nutrition_cols[i % 2]:
-                        st.metric(label, str(value))
+                st.caption(
+                    "Nutrition values are shown as recorded in the meal dataset. "
+                    "They reflect the original recipe serving information."
+                )
 
             else:
-                st.info("Nutrition information is not available.")
 
-        # COOKING INSTRUCTIONS
-
-        st.write("Cooking Instructions:")
-        st.write(meal["Cooking Instructions"])
+                st.info("Nutrition details are not available for this meal.")
 
 
         # --------------------------------------------------
-        # ALTERNATIVE MEALS
+        # EXPLORE OTHER MEALS
         # --------------------------------------------------
 
-        st.divider()
+        with st.expander("🔄 Explore Other Meals", expanded=False):
 
-        show_alternatives = st.checkbox(
-            "Explore Other Meals",
-            key=f"show_alternatives_{index}"
-        )
-
-        if show_alternatives:
+            st.caption(
+                "Looking for something different? Browse other recipes "
+                "that match your preferences."
+            )
 
             other_meals = filtered_meals[
                 ~filtered_meals["Meal Name"].isin(
@@ -793,9 +1012,13 @@ for index, meal in meal_plan.iterrows():
 
             else:
 
+                alternative_names = (
+                    other_meals["Meal Name"].tolist()
+                )
+
                 selected_alternative = st.selectbox(
                     "Choose an alternative meal:",
-                    other_meals["Meal Name"].tolist(),
+                    alternative_names,
                     key=f"alternative_{index}"
                 )
 
@@ -805,7 +1028,8 @@ for index, meal in meal_plan.iterrows():
                 ):
 
                     new_meal = other_meals[
-                        other_meals["Meal Name"] == selected_alternative
+                        other_meals["Meal Name"]
+                        == selected_alternative
                     ].iloc[0]
 
                     replacement_cost = (
@@ -830,16 +1054,32 @@ for index, meal in meal_plan.iterrows():
                     ):
 
                         st.warning(
-                            f"This replacement brings your plan to "
-                            f"${revised_total:.2f}, above your "
-                            f"${weekly_budget:.2f} weekly budget."
+                            f"This replacement would bring your plan to "
+                            f"${revised_total:.2f}, which is above your "
+                            f"${weekly_budget:.2f} weekly budget. "
+                            "Choose a less expensive alternative or increase "
+                            "your weekly budget."
                         )
 
                     else:
 
                         st.session_state.meal_plan.loc[index] = new_meal
 
+                        st.session_state["weekly_budget_met"] = (
+                            revised_total <= weekly_budget
+                            if use_weekly_budget
+                            else None
+                        )
+
                         st.rerun()
+
+
+# --------------------------------------------------
+# OPEN ENLARGED PHOTO DIALOG
+# --------------------------------------------------
+
+if open_large_photo:
+    show_large_photo()
 
 
 # --------------------------------------------------
@@ -883,10 +1123,20 @@ if use_weekly_budget:
     else:
 
         st.warning(
-            f"Your meal plan exceeds your weekly budget "
-            f"by ${total_cost - weekly_budget:.2f}. "
-            "Try adjusting your preferences or increasing your budget."
+            f"No combination of the available meals fits your "
+            f"${weekly_budget:.2f} weekly budget with your current "
+            f"preferences and serving size. The least expensive plan "
+            f"costs ${total_cost:.2f}, which is "
+            f"${total_cost - weekly_budget:.2f} over budget. "
+            "Try increasing your weekly budget, lowering your serving "
+            "size, or adjusting your filters."
         )
+
+
+st.caption(
+    "Total Estimated Cost reflects the ingredient amounts "
+    "used for your selected serving sizes."
+)
 
 
 # --------------------------------------------------
@@ -894,8 +1144,11 @@ if use_weekly_budget:
 # --------------------------------------------------
 
 st.caption(
-    "Estimated Cost reflects the ingredient amounts used "
-    "for your selected serving sizes. Walmart Package Price "
-    "reflects the full grocery package costs recorded in the dataset. "
-    "Actual store prices may vary."
+    "Estimated Cost reflects the ingredient amounts "
+    "used for your selected serving sizes. "
+    "Walmart Package Price reflects the full grocery "
+    "package costs recorded in the dataset. "
+    "The package price is based on the original recipe "
+    "quantities and does not automatically adjust for "
+    "additional servings. Actual store prices may vary."
 )
